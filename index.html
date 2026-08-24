@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Крестики-Нолики</title>
+    <!-- Подключаем Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            background-color: var(--tg-theme-bg-color, #18222d);
+            color: var(--tg-theme-text-color, #ffffff);
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        h2 { margin-bottom: 10px; }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 90px);
+            grid-template-rows: repeat(3, 90px);
+            gap: 10px;
+        }
+        .cell {
+            width: 90px;
+            height: 90px;
+            background-color: var(--tg-theme-secondary-bg-color, #232e3c);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+        }
+        .status {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: 500;
+        }
+        .btn-reset {
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: var(--tg-theme-button-color, #2ea6ff);
+            color: var(--tg-theme-button-text-color, #fff);
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2 id="title">❌ Крестики-Нолики ⭕</h2>
+    <div class="board" id="board"></div>
+    <div class="status" id="status">Твой ход!</div>
+    <button class="btn-reset" onclick="resetGame()">Перезапустить</button>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Разворачивает Mini App на весь экран
+
+        let boardState = ['', '', '', '', '', '', '', '', ''];
+        let gameOver = false;
+
+        const boardEl = document.getElementById('board');
+        const statusEl = document.getElementById('status');
+
+        function createBoard() {
+            boardEl.innerHTML = '';
+            boardState.forEach((val, idx) => {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.innerText = val;
+                cell.addEventListener('click', () => makeMove(idx));
+                boardEl.appendChild(cell);
+            });
+        }
+
+        function makeMove(idx) {
+            if (boardState[idx] !== '' || gameOver) return;
+            
+            boardState[idx] = '❌';
+            createBoard();
+
+            if (checkWin('❌')) {
+                statusEl.innerText = '🎉 Ты победил!';
+                gameOver = true;
+                return;
+            }
+
+            if (!boardState.includes('')) {
+                statusEl.innerText = '🤝 Ничья!';
+                gameOver = true;
+                return;
+            }
+
+            statusEl.innerText = 'Ход бота...';
+            setTimeout(botMove, 400);
+        }
+
+        function botMove() {
+            let emptyIndices = boardState.map((val, idx) => val === '' ? idx : null).filter(val => val !== null);
+            if (emptyIndices.length === 0 || gameOver) return;
+
+            let randomIdx = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+            boardState[randomIdx] = '⭕';
+            createBoard();
+
+            if (checkWin('⭕')) {
+                statusEl.innerText = '🤖 Бот победил!';
+                gameOver = true;
+            } else {
+                statusEl.innerText = 'Твой ход!';
+            }
+        }
+
+        function checkWin(symbol) {
+            const wins = [
+                [0,1,2], [3,4,5], [6,7,8],
+                [0,3,6], [1,4,7], [2,5,8],
+                [0,4,8], [2,4,6]
+            ];
+            return wins.some(comb => comb.every(idx => boardState[idx] === symbol));
+        }
+
+        function resetGame() {
+            boardState = ['', '', '', '', '', '', '', '', ''];
+            gameOver = false;
+            statusEl.innerText = 'Твой ход!';
+            createBoard();
+        }
+
+        createBoard();
+    </script>
+</body>
+</html>
