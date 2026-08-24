@@ -258,7 +258,7 @@ body {
             </div>
         </div>
 
-        <!-- Магазин скинов -->
+        <!-- Магазин -->
         <div id="tab-shop" class="tab-page">
             <div class="section-title">🛒 Магазин скинов (Экипировка)</div>
             <div id="shop-list"></div>
@@ -276,7 +276,7 @@ body {
         <div id="tab-profile" class="tab-page">
             <div class="card" style="text-align:center;">
                 <h2 id="prof-username">Игрок</h2>
-                <div style="margin:10px 0; color:#2ea6ff; font-weight:bold;" id="prof-level">Уровень: 1</div>
+                <div style="margin:10px 0; color:#2ea6ff; font-weight:bold;">Уровень: 1</div>
                 <div>💰 Баланс: <b id="prof-balance">200</b> Креликов</div>
                 <div>🏆 Всего побед: <b id="prof-wins">0</b></div>
                 <div style="margin-top: 15px;">🎨 Активный скин: <b id="prof-skin">❌ / ⭕</b></div>
@@ -284,19 +284,19 @@ body {
         </div>
     </div>
 
-    <!-- Модалка настройки ИИ -->
+    <!-- Модалка Настройки ИИ -->
     <div class="modal" id="ai-setup-modal">
         <div class="modal-content">
             <h3>🤖 Режим с ИИ</h3>
             <p style="font-size:13px; color:#8e9499; margin: 10px 0;">Выберите сложность:</p>
-            <button class="btn-diff selected" id="diff-easy" data-diff="easy">🟢 Легкий бот</button>
-            <button class="btn-diff" id="diff-hard" data-diff="hard">🔴 Сложный бот</button>
+            <button class="btn-diff selected" id="diff-easy">🟢 Легкий бот</button>
+            <button class="btn-diff" id="diff-hard">🔴 Сложный бот</button>
             <button class="btn-main" id="btn-start-ai-coin" style="margin-top:15px;">Бросить монетку и начать!</button>
             <button class="btn-diff" id="btn-close-setup" style="background:#444;">Назад</button>
         </div>
     </div>
 
-    <!-- Модалка ожидания вызова игроку -->
+    <!-- Модалка Вызова -->
     <div class="modal" id="challenge-modal">
         <div class="modal-content">
             <h3>⚔️ Онлайн вызов</h3>
@@ -305,7 +305,7 @@ body {
         </div>
     </div>
 
-    <!-- Модалка броска монетки -->
+    <!-- Модалка Монетки -->
     <div class="modal" id="coin-modal">
         <div class="modal-content">
             <h3>🪙 Бросок монетки</h3>
@@ -314,7 +314,7 @@ body {
         </div>
     </div>
 
-    <!-- Навигация -->
+    <!-- Нижняя навигация -->
     <div class="navbar">
         <button class="nav-item active" data-tab="home"><span>🏠</span>Главная</button>
         <button class="nav-item" data-tab="shop"><span>🛒</span>Магазин</button>
@@ -322,474 +322,432 @@ body {
         <button class="nav-item" data-tab="profile"><span>👤</span>Профиль</button>
     </div>
 
-    <script src="script.js">
-        (function () {
-    function init() {
-        var tg = null;
-        try {
-            if (window.Telegram && window.Telegram.WebApp) {
-                tg = window.Telegram.WebApp;
-                tg.ready();
-                tg.expand();
-            }
-        } catch (e) {
-            console.log("Telegram init error:", e);
+    <script src="script.js">function initApp() {
+    var tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+    if (tg) {
+        try { tg.ready(); tg.expand(); } catch (e) {}
+    }
+
+    var user = { name: "Игрок", balance: 200, wins: 0, equippedSkin: 0 };
+    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        if (tg.initDataUnsafe.user.username) user.name = '@' + tg.initDataUnsafe.user.username;
+        else if (tg.initDataUnsafe.user.first_name) user.name = tg.initDataUnsafe.user.first_name;
+    }
+
+    var skins = [
+        { name: "Классика", x: "❌", o: "⭕", price: 0, unlocked: true },
+        { name: "Огонь и Лед", x: "🔥", o: "❄️", price: 100, unlocked: false },
+        { name: "Череп и Молния", x: "💀", o: "⚡", price: 250, unlocked: false },
+        { name: "Бриллиант и Корона", x: "💎", o: "👑", price: 500, unlocked: false },
+        { name: "Космос", x: "🚀", o: "🪐", price: 750, unlocked: false },
+        { name: "Пираты", x: "🏴‍☠️", o: "⚓", price: 1000, unlocked: false },
+        { name: "Природа", x: "🍄", o: "🍀", price: 1250, unlocked: false },
+        { name: "Еда", x: "🍔", o: "🍕", price: 1500, unlocked: false },
+        { name: "Животные", x: "🐱", o: "🐶", price: 1750, unlocked: false },
+        { name: "Магия", x: "🔮", o: "🪄", price: 2000, unlocked: false },
+        { name: "Спорт", x: "⚽", o: "🏀", price: 2500, unlocked: false },
+        { name: "Музыка", x: "🎸", o: "🎧", price: 3000, unlocked: false },
+        { name: "Роботы", x: "🤖", o: "👾", price: 4000, unlocked: false },
+        { name: "Драконы", x: "🐉", o: "🛡️", price: 5000, unlocked: false }
+    ];
+
+    var onlinePlayers = [
+        { id: 1, name: "@alex_pro", level: 12, wins: 42, status: "Свободен" },
+        { id: 2, name: "@crypto_king", level: 8, wins: 24, status: "Свободен" },
+        { id: 3, name: "@dark_lord", level: 15, wins: 51, status: "Свободен" },
+        { id: 4, name: "@lucky_girl", level: 4, wins: 11, status: "Свободен" },
+        { id: 5, name: "@telegram_boss", level: 19, wins: 88, status: "Свободен" }
+    ];
+
+    var selectedDifficulty = "easy";
+    var gameMode = "ai";
+    var currentOpponentName = "";
+    var boardState = ['', '', '', '', '', '', '', '', ''];
+    var activeGame = false;
+    var isMyTurn = true;
+    var playerSym = '❌';
+    var aiSym = '⭕';
+
+    function updateUI() {
+        var topUser = document.getElementById('top-username');
+        var profUser = document.getElementById('prof-username');
+        var topBal = document.getElementById('top-balance');
+        var profBal = document.getElementById('prof-balance');
+        var profWins = document.getElementById('prof-wins');
+        var profSkin = document.getElementById('prof-skin');
+
+        if (topUser) topUser.innerText = user.name;
+        if (profUser) profUser.innerText = user.name;
+        if (topBal) topBal.innerText = user.balance;
+        if (profBal) profBal.innerText = user.balance;
+        if (profWins) profWins.innerText = user.wins;
+        if (profSkin) profSkin.innerText = skins[user.equippedSkin].x + " / " + skins[user.equippedSkin].o;
+
+        renderShop();
+        renderOnlinePlayers();
+    }
+
+    function renderOnlinePlayers() {
+        var listEl = document.getElementById('online-players-list');
+        if (!listEl) return;
+        listEl.innerHTML = '';
+        for (var i = 0; i < onlinePlayers.length; i++) {
+            var p = onlinePlayers[i];
+            var row = document.createElement('div');
+            row.className = 'player-row';
+            row.innerHTML = 
+                '<div class="player-info-left">' +
+                    '<span class="player-name">' + p.name + ' (Ур. ' + p.level + ')</span>' +
+                    '<span class="player-status">🟢 ' + p.status + ' • Побед: ' + p.wins + '</span>' +
+                '</div>' +
+                '<div><button class="btn-challenge" data-id="' + p.id + '">Кинуть вызов</button></div>';
+            listEl.appendChild(row);
         }
 
-        var user = {
-            name: "Игрок",
-            balance: 200,
-            wins: 0,
-            equippedSkin: 0
-        };
-
-        if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            if (tg.initDataUnsafe.user.username) {
-                user.name = '@' + tg.initDataUnsafe.user.username;
-            } else if (tg.initDataUnsafe.user.first_name) {
-                user.name = tg.initDataUnsafe.user.first_name;
-            }
+        var challengeBtns = listEl.querySelectorAll('.btn-challenge');
+        for (var b = 0; b < challengeBtns.length; b++) {
+            challengeBtns[b].onclick = function() {
+                var pid = parseInt(this.getAttribute('data-id'));
+                var targetPlayer = null;
+                for (var k = 0; k < onlinePlayers.length; k++) {
+                    if (onlinePlayers[k].id === pid) { targetPlayer = onlinePlayers[k]; break; }
+                }
+                if (targetPlayer) startPvpChallenge(targetPlayer);
+            };
         }
+    }
 
-        var skins = [
-            { name: "Классика", x: "❌", o: "⭕", price: 0, unlocked: true },
-            { name: "Огонь и Лед", x: "🔥", o: "❄️", price: 100, unlocked: false },
-            { name: "Череп и Молния", x: "💀", o: "⚡", price: 250, unlocked: false },
-            { name: "Бриллиант и Корона", x: "💎", o: "👑", price: 500, unlocked: false },
-            { name: "Космос", x: "🚀", o: "🪐", price: 750, unlocked: false },
-            { name: "Пираты", x: "🏴‍☠️", o: "⚓", price: 1000, unlocked: false },
-            { name: "Природа", x: "🍄", o: "🍀", price: 1250, unlocked: false },
-            { name: "Еда", x: "🍔", o: "🍕", price: 1500, unlocked: false },
-            { name: "Животные", x: "🐱", o: "🐶", price: 1750, unlocked: false },
-            { name: "Магия", x: "🔮", o: "🪄", price: 2000, unlocked: false },
-            { name: "Спорт", x: "⚽", o: "🏀", price: 2500, unlocked: false },
-            { name: "Музыка", x: "🎸", o: "🎧", price: 3000, unlocked: false },
-            { name: "Роботы", x: "🤖", o: "👾", price: 4000, unlocked: false },
-            { name: "Драконы", x: "🐉", o: "🛡️", price: 5000, unlocked: false }
-        ];
+    function startPvpChallenge(opponent) {
+        currentOpponentName = opponent.name;
+        gameMode = "pvp";
+        
+        var modal = document.getElementById('challenge-modal');
+        var textEl = document.getElementById('challenge-text');
+        var cancelBtn = document.getElementById('btn-cancel-challenge');
+        if (modal) modal.style.display = 'flex';
+        if (cancelBtn) cancelBtn.style.display = 'block';
+        if (textEl) textEl.innerHTML = "Отправляем вызов игроку <b>" + opponent.name + "</b>...";
 
-        var onlinePlayers = [
-            { id: 1, name: "@alex_pro", level: 12, wins: 42, status: "Свободен" },
-            { id: 2, name: "@crypto_king", level: 8, wins: 24, status: "Свободен" },
-            { id: 3, name: "@dark_lord", level: 15, wins: 51, status: "Свободен" },
-            { id: 4, name: "@lucky_girl", level: 4, wins: 11, status: "Свободен" },
-            { id: 5, name: "@telegram_boss", level: 19, wins: 88, status: "Свободен" }
-        ];
-
-        var selectedDifficulty = "easy";
-        var gameMode = "ai";
-        var currentOpponentName = "";
-        var boardState = ['', '', '', '', '', '', '', '', ''];
-        var activeGame = false;
-        var isMyTurn = true;
-        var playerSym = '❌';
-        var aiSym = '⭕';
-
-        function updateUI() {
-            var topUser = document.getElementById('top-username');
-            var profUser = document.getElementById('prof-username');
-            var topBal = document.getElementById('top-balance');
-            var profBal = document.getElementById('prof-balance');
-            var profWins = document.getElementById('prof-wins');
-            var profSkin = document.getElementById('prof-skin');
-
-            if (topUser) topUser.innerText = user.name;
-            if (profUser) profUser.innerText = user.name;
-            if (topBal) topBal.innerText = user.balance;
-            if (profBal) profBal.innerText = user.balance;
-            if (profWins) profWins.innerText = user.wins;
-            if (profSkin) profSkin.innerText = skins[user.equippedSkin].x + " / " + skins[user.equippedSkin].o;
-
-            renderShop();
-            renderOnlinePlayers();
-        }
-
-        function renderOnlinePlayers() {
-            var listEl = document.getElementById('online-players-list');
-            if (!listEl) return;
-            listEl.innerHTML = '';
-            for (var i = 0; i < onlinePlayers.length; i++) {
-                var p = onlinePlayers[i];
-                var row = document.createElement('div');
-                row.className = 'player-row';
-                row.innerHTML = 
-                    '<div class="player-info-left">' +
-                        '<span class="player-name">' + p.name + ' (Ур. ' + p.level + ')</span>' +
-                        '<span class="player-status">🟢 ' + p.status + ' • Побед: ' + p.wins + '</span>' +
-                    '</div>' +
-                    '<div><button class="btn-challenge" data-id="' + p.id + '">Кинуть вызов</button></div>';
-                listEl.appendChild(row);
+        setTimeout(function() {
+            if (modal && modal.style.display === 'flex') {
+                if (textEl) textEl.innerHTML = "🎉 <b>" + opponent.name + "</b> принял вызов!<br>Переходим к броску монетки...";
+                if (cancelBtn) cancelBtn.style.display = 'none';
+                setTimeout(function() {
+                    modal.style.display = 'none';
+                    startCoinFlipProcess();
+                }, 1200);
             }
+        }, 1800);
+    }
 
-            var challengeBtns = listEl.querySelectorAll('.btn-challenge');
-            for (var b = 0; b < challengeBtns.length; b++) {
-                challengeBtns[b].addEventListener('click', function() {
-                    var pid = parseInt(this.getAttribute('data-id'));
-                    var targetPlayer = null;
-                    for (var k = 0; k < onlinePlayers.length; k++) {
-                        if (onlinePlayers[k].id === pid) {
-                            targetPlayer = onlinePlayers[k];
-                            break;
-                        }
-                    }
-                    if (targetPlayer) {
-                        startPvpChallenge(targetPlayer);
-                    }
-                });
-            }
-        }
-
-        function startPvpChallenge(opponent) {
-            currentOpponentName = opponent.name;
-            gameMode = "pvp";
-            
+    var btnCancel = document.getElementById('btn-cancel-challenge');
+    if (btnCancel) {
+        btnCancel.onclick = function() {
             var modal = document.getElementById('challenge-modal');
-            var textEl = document.getElementById('challenge-text');
-            var cancelBtn = document.getElementById('btn-cancel-challenge');
-            if (modal) modal.style.display = 'flex';
-            if (cancelBtn) cancelBtn.style.display = 'block';
-            if (textEl) textEl.innerHTML = "Отправляем вызов игроку <b>" + opponent.name + "</b>...";
+            if (modal) modal.style.display = 'none';
+        };
+    }
 
-            setTimeout(function() {
-                if (modal && modal.style.display === 'flex') {
-                    if (textEl) textEl.innerHTML = "🎉 <b>" + opponent.name + "</b> принял вызов!<br>Переходим к броску монетки...";
-                    if (cancelBtn) cancelBtn.style.display = 'none';
+    function renderShop() {
+        var shopList = document.getElementById('shop-list');
+        if (!shopList) return;
+        shopList.innerHTML = '';
+        for (var i = 0; i < skins.length; i++) {
+            var s = skins[i];
+            var item = document.createElement('div');
+            item.className = 'shop-item';
+            var statusText = "";
+            var btnHtml = "";
 
-                    setTimeout(function() {
-                        modal.style.display = 'none';
-                        startCoinFlipProcess();
-                    }, 1200);
-                }
-            }, 1800);
-        }
-
-        var btnCancel = document.getElementById('btn-cancel-challenge');
-        if (btnCancel) {
-            btnCancel.addEventListener('click', function() {
-                var modal = document.getElementById('challenge-modal');
-                if (modal) modal.style.display = 'none';
-            });
-        }
-
-        function renderShop() {
-            var shopList = document.getElementById('shop-list');
-            if (!shopList) return;
-            shopList.innerHTML = '';
-            for (var i = 0; i < skins.length; i++) {
-                var s = skins[i];
-                var item = document.createElement('div');
-                item.className = 'shop-item';
-                
-                var statusText = "";
-                var btnHtml = "";
-
-                if (user.equippedSkin === i) {
-                    statusText = "<b style='color:#2ea6ff;'>Экипировано</b>";
-                    btnHtml = "<button disabled style='padding:8px 12px; background:#444; color:#aaa; border:none; border-radius:8px;'>Надето</button>";
-                } else if (s.unlocked) {
-                    statusText = "<span style='color:#4cd137;'>Куплено</span>";
-                    btnHtml = "<button class='equip-btn' data-idx='" + i + "' style='padding:8px 12px; background:#2ea6ff; color:#fff; border:none; border-radius:8px; cursor:pointer;'>Надеть</button>";
-                } else {
-                    statusText = "🪙 " + s.price;
-                    btnHtml = "<button class='buy-btn' data-idx='" + i + "' style='padding:8px 12px; background:#fbc531; color:#000; font-weight:bold; border:none; border-radius:8px; cursor:pointer;'>Купить</button>";
-                }
-
-                item.innerHTML = "<div><b>" + s.name + "</b><br><span style='font-size:24px;'>" + s.x + " " + s.o + "</span><br><small>" + statusText + "</small></div><div>" + btnHtml + "</div>";
-                shopList.appendChild(item);
+            if (user.equippedSkin === i) {
+                statusText = "<b style='color:#2ea6ff;'>Экипировано</b>";
+                btnHtml = "<button disabled style='padding:8px 12px; background:#444; color:#aaa; border:none; border-radius:8px;'>Надето</button>";
+            } else if (s.unlocked) {
+                statusText = "<span style='color:#4cd137;'>Куплено</span>";
+                btnHtml = "<button class='equip-btn' data-idx='" + i + "' style='padding:8px 12px; background:#2ea6ff; color:#fff; border:none; border-radius:8px;'>Надеть</button>";
+            } else {
+                statusText = "🪙 " + s.price;
+                btnHtml = "<button class='buy-btn' data-idx='" + i + "' style='padding:8px 12px; background:#fbc531; color:#000; font-weight:bold; border:none; border-radius:8px;'>Купить</button>";
             }
 
-            var buyBtns = shopList.querySelectorAll('.buy-btn');
-            for (var b = 0; b < buyBtns.length; b++) {
-                buyBtns[b].addEventListener('click', function() {
-                    var idx = parseInt(this.getAttribute('data-idx'));
-                    if (user.balance >= skins[idx].price) {
-                        user.balance -= skins[idx].price;
-                        skins[idx].unlocked = true;
-                        user.equippedSkin = idx;
-                        updateUI();
-                        alert('Скин успешно куплен и надет!');
-                    } else {
-                        alert('Недостаточно Креликов!');
-                    }
-                });
-            }
+            item.innerHTML = "<div><b>" + s.name + "</b><br><span style='font-size:24px;'>" + s.x + " " + s.o + "</span><br><small>" + statusText + "</small></div><div>" + btnHtml + "</div>";
+            shopList.appendChild(item);
+        }
 
-            var equipBtns = shopList.querySelectorAll('.equip-btn');
-            for (var e = 0; e < equipBtns.length; e++) {
-                equipBtns[e].addEventListener('click', function() {
-                    var idx = parseInt(this.getAttribute('data-idx'));
+        var buyBtns = shopList.querySelectorAll('.buy-btn');
+        for (var b = 0; b < buyBtns.length; b++) {
+            buyBtns[b].onclick = function() {
+                var idx = parseInt(this.getAttribute('data-idx'));
+                if (user.balance >= skins[idx].price) {
+                    user.balance -= skins[idx].price;
+                    skins[idx].unlocked = true;
                     user.equippedSkin = idx;
                     updateUI();
-                });
-            }
-        }
-
-        var navButtons = document.querySelectorAll('.nav-item');
-        for (var i = 0; i < navButtons.length; i++) {
-            navButtons[i].addEventListener('click', function() {
-                var tabId = this.getAttribute('data-tab');
-                var pages = document.querySelectorAll('.tab-page');
-                for (var p = 0; p < pages.length; p++) pages[p].classList.remove('active');
-                for (var n = 0; n < navButtons.length; n++) navButtons[n].classList.remove('active');
-
-                var targetTab = document.getElementById('tab-' + tabId);
-                if (targetTab) targetTab.classList.add('active');
-                this.classList.add('active');
-            });
-        }
-
-        var btnOpenAi = document.getElementById('btn-open-ai-setup');
-        if (btnOpenAi) {
-            btnOpenAi.addEventListener('click', function() {
-                gameMode = "ai";
-                var modal = document.getElementById('ai-setup-modal');
-                if (modal) modal.style.display = 'flex';
-            });
-        }
-
-        var btnCloseSetup = document.getElementById('btn-close-setup');
-        if (btnCloseSetup) {
-            btnCloseSetup.addEventListener('click', function() {
-                var modal = document.getElementById('ai-setup-modal');
-                if (modal) modal.style.display = 'none';
-            });
-        }
-
-        var diffEasy = document.getElementById('diff-easy');
-        var diffHard = document.getElementById('diff-hard');
-        if (diffEasy) {
-            diffEasy.addEventListener('click', function() {
-                selectedDifficulty = 'easy';
-                this.classList.add('selected');
-                if (diffHard) diffHard.classList.remove('selected');
-            });
-        }
-        if (diffHard) {
-            diffHard.addEventListener('click', function() {
-                selectedDifficulty = 'hard';
-                this.classList.add('selected');
-                if (diffEasy) diffEasy.classList.remove('selected');
-            });
-        }
-
-        var btnStartAi = document.getElementById('btn-start-ai-coin');
-        if (btnStartAi) {
-            btnStartAi.addEventListener('click', function() {
-                var modal = document.getElementById('ai-setup-modal');
-                if (modal) modal.style.display = 'none';
-                startCoinFlipProcess();
-            });
-        }
-
-        function startCoinFlipProcess() {
-            var coinModal = document.getElementById('coin-modal');
-            if (coinModal) coinModal.style.display = 'flex';
-            
-            var resultText = document.getElementById('coin-result-text');
-            var goBtn = document.getElementById('btn-go-game');
-            if (goBtn) goBtn.style.display = 'none';
-            if (resultText) resultText.innerText = "🪙 Монетка подбрасывается...";
-
-            setTimeout(function() {
-                var coinFlip = Math.random() < 0.5;
-                var activeS = skins[user.equippedSkin];
-
-                if (coinFlip) {
-                    playerSym = activeS.x;
-                    aiSym = activeS.o;
-                    isMyTurn = true;
-                    if (resultText) resultText.innerHTML = "🎉 Монетка выпала в вашу пользу!<br><b>Вы ходите первыми (" + playerSym + ")</b>";
                 } else {
-                    playerSym = activeS.o;
-                    aiSym = activeS.x;
-                    isMyTurn = false;
-                    var nameTag = gameMode === 'ai' ? 'ИИ' : currentOpponentName;
-                    if (resultText) resultText.innerHTML = "🤖 Соперник (" + nameTag + ") ходит первым!<br><b>Его символ (" + aiSym + ")</b>";
+                    alert('Недостаточно Креликов!');
                 }
-                if (goBtn) goBtn.style.display = 'block';
-            }, 1000);
+            };
         }
 
-        var btnGoGame = document.getElementById('btn-go-game');
-        if (btnGoGame) {
-            btnGoGame.addEventListener('click', function() {
-                var coinModal = document.getElementById('coin-modal');
-                var pvpSec = document.getElementById('pvp-section');
-                var gArea = document.getElementById('game-area');
-                if (coinModal) coinModal.style.display = 'none';
-                if (pvpSec) pvpSec.style.display = 'none';
-                if (gArea) gArea.style.display = 'block';
-                
-                var title = document.getElementById('game-mode-title');
-                if (title) title.innerText = gameMode === 'ai' ? 'Игра с ИИ' : 'Дуэль с ' + currentOpponentName;
-                startNewGameLogic();
-            });
+        var equipBtns = shopList.querySelectorAll('.equip-btn');
+        for (var e = 0; e < equipBtns.length; e++) {
+            equipBtns[e].onclick = function() {
+                user.equippedSkin = parseInt(this.getAttribute('data-idx'));
+                updateUI();
+            };
         }
+    }
 
-        var btnQuit = document.getElementById('btn-quit');
-        if (btnQuit) {
-            btnQuit.addEventListener('click', function() {
-                var gArea = document.getElementById('game-area');
-                var pvpSec = document.getElementById('pvp-section');
-                if (gArea) gArea.style.display = 'none';
-                if (pvpSec) pvpSec.style.display = 'block';
-            });
-        }
+    var navButtons = document.querySelectorAll('.nav-item');
+    for (var i = 0; i < navButtons.length; i++) {
+        navButtons[i].onclick = function() {
+            var tabId = this.getAttribute('data-tab');
+            var pages = document.querySelectorAll('.tab-page');
+            for (var p = 0; p < pages.length; p++) pages[p].classList.remove('active');
+            for (var n = 0; n < navButtons.length; n++) navButtons[n].classList.remove('active');
+            var targetTab = document.getElementById('tab-' + tabId);
+            if (targetTab) targetTab.classList.add('active');
+            this.classList.add('active');
+        };
+    }
 
-        function startNewGameLogic() {
-            boardState = ['', '', '', '', '', '', '', '', ''];
-            activeGame = true;
-            var disp = document.getElementById('player-symbol-display');
-            var status = document.getElementById('game-status');
-            if (disp) disp.innerText = playerSym;
+    var btnOpenAi = document.getElementById('btn-open-ai-setup');
+    if (btnOpenAi) {
+        btnOpenAi.onclick = function() {
+            gameMode = "ai";
+            var modal = document.getElementById('ai-setup-modal');
+            if (modal) modal.style.display = 'flex';
+        };
+    }
+
+    var btnCloseSetup = document.getElementById('btn-close-setup');
+    if (btnCloseSetup) {
+        btnCloseSetup.onclick = function() {
+            var modal = document.getElementById('ai-setup-modal');
+            if (modal) modal.style.display = 'none';
+        };
+    }
+
+    var diffEasy = document.getElementById('diff-easy');
+    var diffHard = document.getElementById('diff-hard');
+    if (diffEasy) {
+        diffEasy.onclick = function() {
+            selectedDifficulty = 'easy';
+            this.classList.add('selected');
+            if (diffHard) diffHard.classList.remove('selected');
+        };
+    }
+    if (diffHard) {
+        diffHard.onclick = function() {
+            selectedDifficulty = 'hard';
+            this.classList.add('selected');
+            if (diffEasy) diffEasy.classList.remove('selected');
+        };
+    }
+
+    var btnStartAi = document.getElementById('btn-start-ai-coin');
+    if (btnStartAi) {
+        btnStartAi.onclick = function() {
+            var modal = document.getElementById('ai-setup-modal');
+            if (modal) modal.style.display = 'none';
+            startCoinFlipProcess();
+        };
+    }
+
+    function startCoinFlipProcess() {
+        var coinModal = document.getElementById('coin-modal');
+        if (coinModal) coinModal.style.display = 'flex';
+        var resultText = document.getElementById('coin-result-text');
+        var goBtn = document.getElementById('btn-go-game');
+        if (goBtn) goBtn.style.display = 'none';
+        if (resultText) resultText.innerText = "🪙 Монетка подбрасывается...";
+
+        setTimeout(function() {
+            var coinFlip = Math.random() < 0.5;
+            var activeS = skins[user.equippedSkin];
+
+            if (coinFlip) {
+                playerSym = activeS.x;
+                aiSym = activeS.o;
+                isMyTurn = true;
+                if (resultText) resultText.innerHTML = "🎉 Монетка выпала в вашу пользу!<br><b>Вы ходите первыми (" + playerSym + ")</b>";
+            } else {
+                playerSym = activeS.o;
+                aiSym = activeS.x;
+                isMyTurn = false;
+                var nameTag = gameMode === 'ai' ? 'ИИ' : currentOpponentName;
+                if (resultText) resultText.innerHTML = "🤖 Соперник (" + nameTag + ") ходит первым!<br><b>Его символ (" + aiSym + ")</b>";
+            }
+            if (goBtn) goBtn.style.display = 'block';
+        }, 1000);
+    }
+
+    var btnGoGame = document.getElementById('btn-go-game');
+    if (btnGoGame) {
+        btnGoGame.onclick = function() {
+            var coinModal = document.getElementById('coin-modal');
+            var pvpSec = document.getElementById('pvp-section');
+            var gArea = document.getElementById('game-area');
+            if (coinModal) coinModal.style.display = 'none';
+            if (pvpSec) pvpSec.style.display = 'none';
+            if (gArea) gArea.style.display = 'block';
             
-            if (isMyTurn) {
-                if (status) status.innerText = "Ваш ход (" + playerSym + ")";
-                renderBoard();
-            } else {
-                if (status) status.innerText = "Ход соперника...";
-                renderBoard();
-                setTimeout(opponentMove, 700);
-            }
-        }
+            var title = document.getElementById('game-mode-title');
+            if (title) title.innerText = gameMode === 'ai' ? 'Игра с ИИ' : 'Дуэль с ' + currentOpponentName;
+            startNewGameLogic();
+        };
+    }
 
-        function renderBoard() {
-            var boardEl = document.getElementById('board');
-            if (!boardEl) return;
-            boardEl.innerHTML = '';
-            for (var i = 0; i < 9; i++) {
-                var cell = document.createElement('div');
-                cell.className = 'cell';
-                cell.innerText = boardState[i];
-                cell.setAttribute('data-index', i);
-                
-                cell.addEventListener('click', function() {
-                    var idx = parseInt(this.getAttribute('data-index'));
-                    if (!activeGame || !isMyTurn || boardState[idx] !== '') return;
+    var btnQuit = document.getElementById('btn-quit');
+    if (btnQuit) {
+        btnQuit.onclick = function() {
+            var gArea = document.getElementById('game-area');
+            var pvpSec = document.getElementById('pvp-section');
+            if (gArea) gArea.style.display = 'none';
+            if (pvpSec) pvpSec.style.display = 'block';
+        };
+    }
 
-                    boardState[idx] = playerSym;
-                    renderBoard();
-
-                    var status = document.getElementById('game-status');
-
-                    if (checkWin(playerSym)) {
-                        if (status) status.innerText = "🎉 Вы победили!";
-                        user.balance += 60;
-                        user.wins += 1;
-                        updateUI();
-                        activeGame = false;
-                        return;
-                    }
-
-                    if (isBoardFull()) {
-                        if (status) status.innerText = "🤝 Ничья!";
-                        activeGame = false;
-                        return;
-                    }
-
-                    isMyTurn = false;
-                    var nameTag = gameMode === 'ai' ? 'ИИ думает' : currentOpponentName + ' делает ход';
-                    if (status) status.innerText = nameTag + "...";
-                    setTimeout(opponentMove, 700);
-                });
-
-                boardEl.appendChild(cell);
-            }
-        }
-
-        function opponentMove() {
-            if (!activeGame) return;
-            var moveIdx = -1;
-
-            if (gameMode === 'ai' && selectedDifficulty === 'easy') {
-                var empties = [];
-                for (var i = 0; i < 9; i++) { if (boardState[i] === '') empties.push(i); }
-                if (empties.length > 0) moveIdx = empties[Math.floor(Math.random() * empties.length)];
-            } else {
-                moveIdx = getSmartAiMove();
-            }
-
-            if (moveIdx !== -1) {
-                boardState[moveIdx] = aiSym;
-            }
-            renderBoard();
-
-            var status = document.getElementById('game-status');
-
-            if (checkWin(aiSym)) {
-                var loseName = gameMode === 'ai' ? '🤖 ИИ' : currentOpponentName;
-                if (status) status.innerText = "😢 " + loseName + " победил!";
-                activeGame = false;
-                return;
-            }
-
-            if (isBoardFull()) {
-                if (status) status.innerText = "🤝 Ничья!";
-                activeGame = false;
-                return;
-            }
-
-            isMyTurn = true;
+    function startNewGameLogic() {
+        boardState = ['', '', '', '', '', '', '', '', ''];
+        activeGame = true;
+        var disp = document.getElementById('player-symbol-display');
+        var status = document.getElementById('game-status');
+        if (disp) disp.innerText = playerSym;
+        
+        if (isMyTurn) {
             if (status) status.innerText = "Ваш ход (" + playerSym + ")";
+            renderBoard();
+        } else {
+            if (status) status.innerText = "Ход соперника...";
+            renderBoard();
+            setTimeout(opponentMove, 700);
         }
+    }
 
-        function getSmartAiMove() {
-            for (var i = 0; i < 9; i++) {
-                if (boardState[i] === '') {
-                    boardState[i] = aiSym;
-                    if (checkWin(aiSym)) { boardState[i] = ''; return i; }
-                    boardState[i] = '';
-                }
-            }
-            for (var i = 0; i < 9; i++) {
-                if (boardState[i] === '') {
-                    boardState[i] = playerSym;
-                    if (checkWin(playerSym)) { boardState[i] = ''; return i; }
-                    boardState[i] = '';
-                }
-            }
-            if (boardState[4] === '') return 4;
+    function renderBoard() {
+        var boardEl = document.getElementById('board');
+        if (!boardEl) return;
+        boardEl.innerHTML = '';
+        for (var i = 0; i < 9; i++) {
+            var cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.innerText = boardState[i];
+            cell.setAttribute('data-index', i);
+            
+            cell.onclick = function() {
+                var idx = parseInt(this.getAttribute('data-index'));
+                if (!activeGame || !isMyTurn || boardState[idx] !== '') return;
 
+                boardState[idx] = playerSym;
+                renderBoard();
+
+                var status = document.getElementById('game-status');
+
+                if (checkWin(playerSym)) {
+                    if (status) status.innerText = "🎉 Вы победили!";
+                    user.balance += 60;
+                    user.wins += 1;
+                    updateUI();
+                    activeGame = false;
+                    return;
+                }
+
+                if (isBoardFull()) {
+                    if (status) status.innerText = "🤝 Ничья!";
+                    activeGame = false;
+                    return;
+                }
+
+                isMyTurn = false;
+                var nameTag = gameMode === 'ai' ? 'ИИ думает' : currentOpponentName + ' делает ход';
+                if (status) status.innerText = nameTag + "...";
+                setTimeout(opponentMove, 700);
+            };
+
+            boardEl.appendChild(cell);
+        }
+    }
+
+    function opponentMove() {
+        if (!activeGame) return;
+        var moveIdx = -1;
+
+        if (gameMode === 'ai' && selectedDifficulty === 'easy') {
             var empties = [];
-            for (var i = 0; i < 9; i++) {
-                if (boardState[i] === '') empties.push(i);
-            }
-            if (empties.length > 0) {
-                return empties[Math.floor(Math.random() * empties.length)];
-            }
-            return -1;
+            for (var i = 0; i < 9; i++) { if (boardState[i] === '') empties.push(i); }
+            if (empties.length > 0) moveIdx = empties[Math.floor(Math.random() * empties.length)];
+        } else {
+            moveIdx = getSmartAiMove();
         }
 
-        function isBoardFull() {
-            for (var i = 0; i < 9; i++) { if (boardState[i] === '') return false; }
-            return true;
+        if (moveIdx !== -1) boardState[moveIdx] = aiSym;
+        renderBoard();
+
+        var status = document.getElementById('game-status');
+
+        if (checkWin(aiSym)) {
+            var loseName = gameMode === 'ai' ? '🤖 ИИ' : currentOpponentName;
+            if (status) status.innerText = "😢 " + loseName + " победил!";
+            activeGame = false;
+            return;
         }
 
-        function checkWin(sym) {
-            var wins = [
-                [0,1,2], [3,4,5], [6,7,8],
-                [0,3,6], [1,4,7], [2,5,8],
-                [0,4,8], [2,4,6]
-            ];
-            for (var i = 0; i < wins.length; i++) {
-                var c = wins[i];
-                if (boardState[c[0]] === sym && boardState[c[1]] === sym && boardState[c[2]] === sym) {
-                    return true;
-                }
-            }
-            return false;
+        if (isBoardFull()) {
+            if (status) status.innerText = "🤝 Ничья!";
+            activeGame = false;
+            return;
         }
 
-        updateUI();
+        isMyTurn = true;
+        if (status) status.innerText = "Ваш ход (" + playerSym + ")";
     }
 
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", init);
-    } else {
-        init();
+    function getSmartAiMove() {
+        for (var i = 0; i < 9; i++) {
+            if (boardState[i] === '') {
+                boardState[i] = aiSym;
+                if (checkWin(aiSym)) { boardState[i] = ''; return i; }
+                boardState[i] = '';
+            }
+        }
+        for (var i = 0; i < 9; i++) {
+            if (boardState[i] === '') {
+                boardState[i] = playerSym;
+                if (checkWin(playerSym)) { boardState[i] = ''; return i; }
+                boardState[i] = '';
+            }
+        }
+        if (boardState[4] === '') return 4;
+
+        var empties = [];
+        for (var i = 0; i < 9; i++) { if (boardState[i] === '') empties.push(i); }
+        if (empties.length > 0) return empties[Math.floor(Math.random() * empties.length)];
+        return -1;
     }
-})();
-             
- </script>
+
+    function isBoardFull() {
+        for (var i = 0; i < 9; i++) { if (boardState[i] === '') return false; }
+        return true;
+    }
+
+    function checkWin(sym) {
+        var wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+        for (var i = 0; i < wins.length; i++) {
+            var c = wins[i];
+            if (boardState[c[0]] === sym && boardState[c[1]] === sym && boardState[c[2]] === sym) return true;
+        }
+        return false;
+    }
+
+    updateUI();
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initApp);
+} else {
+    initApp();
+}
+        </script>
 </body>
 </html>
