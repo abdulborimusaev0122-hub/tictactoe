@@ -4,139 +4,369 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Крестики-Нолики</title>
-    <!-- Подключаем Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         body {
-            background-color: var(--tg-theme-bg-color, #18222d);
+            background-color: var(--tg-theme-bg-color, #17212b);
             color: var(--tg-theme-text-color, #ffffff);
-            font-family: sans-serif;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
             height: 100vh;
-            margin: 0;
+            overflow: hidden;
         }
-        h2 { margin-bottom: 10px; }
+
+        /* Верхняя шапка */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--tg-theme-secondary-bg-color, #232e3c);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .user-info { font-weight: bold; font-size: 15px; }
+        .currency {
+            background: rgba(46, 166, 255, 0.15);
+            color: #2ea6ff;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        /* Контейнер вкладок */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            padding-bottom: 80px;
+        }
+        .tab-page { display: none; }
+        .tab-page.active { display: block; }
+
+        /* Элементы управления на Главной */
+        .btn-main {
+            width: 100%;
+            padding: 14px;
+            background: #2ea6ff;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 16px;
+            cursor: pointer;
+        }
+        .section-title { font-size: 16px; font-weight: bold; margin: 16px 0 10px; color: #8e9499; }
+        .card {
+            background: var(--tg-theme-secondary-bg-color, #232e3c);
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+        }
+
+        /* Поле игры */
         .board {
             display: grid;
-            grid-template-columns: repeat(3, 90px);
-            grid-template-rows: repeat(3, 90px);
+            grid-template-columns: repeat(3, 1fr);
             gap: 10px;
+            max-width: 300px;
+            margin: 15px auto;
         }
         .cell {
-            width: 90px;
-            height: 90px;
-            background-color: var(--tg-theme-secondary-bg-color, #232e3c);
+            aspect-ratio: 1;
+            background: var(--tg-theme-secondary-bg-color, #232e3c);
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 36px;
             font-weight: bold;
-            cursor: pointer;
-            user-select: none;
         }
-        .status {
-            margin-top: 20px;
-            font-size: 18px;
-            font-weight: 500;
+
+        /* Модальное окно выбора сложности */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
         }
-        .btn-reset {
-            margin-top: 15px;
-            padding: 10px 20px;
-            background: var(--tg-theme-button-color, #2ea6ff);
-            color: var(--tg-theme-button-text-color, #fff);
+        .modal-content {
+            background: var(--tg-theme-secondary-bg-color, #232e3c);
+            padding: 20px;
+            border-radius: 16px;
+            width: 80%;
+            text-align: center;
+        }
+        .btn-diff {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 10px;
             border: none;
-            border-radius: 8px;
-            font-size: 16px;
+            font-weight: bold;
+            background: #2b5278;
+            color: white;
         }
+
+        /* Профиль */
+        .progress-bar {
+            background: rgba(255,255,255,0.1);
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .progress-fill { background: #2ea6ff; height: 100%; width: 0%; transition: width 0.3s; }
+
+        /* Нижняя навигация */
+        .navbar {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            height: 65px;
+            background: var(--tg-theme-secondary-bg-color, #232e3c);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #708499;
+            font-size: 11px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        .nav-item.active { color: #2ea6ff; }
+        .nav-item span { font-size: 20px; margin-bottom: 2px; }
     </style>
 </head>
 <body>
 
-    <h2 id="title">❌ Крестики-Нолики ⭕</h2>
-    <div class="board" id="board"></div>
-    <div class="status" id="status">Твой ход!</div>
-    <button class="btn-reset" onclick="resetGame()">Перезапустить</button>
+    <!-- Шапка с балансом -->
+    <div class="top-bar">
+        <div class="user-info" id="top-username">Игрок</div>
+        <div class="currency">🪙 <span id="top-balance">100</span> Креликов</div>
+    </div>
+
+    <!-- Контент вкладок -->
+    <div class="content">
+        
+        <!-- 1. Главный экран -->
+        <div id="tab-home" class="tab-page active">
+            <button class="btn-main" onclick="openDifficultyModal()">🤖 Играть с ИИ</button>
+            
+            <div id="game-area" style="display:none;">
+                <div class="board" id="board"></div>
+                <div style="text-align:center; margin-top:10px;" id="game-status">Твой ход!</div>
+                <button class="btn-main" style="margin-top:10px; background:#e53935;" onclick="quitGame()">Сдаться / Выйти</button>
+            </div>
+
+            <div id="pvp-section">
+                <div class="section-title">⚔️ Активные заявки</div>
+                <div class="card" id="requests-list">
+                    <i>Нет активных заявок онлайн</i>
+                </div>
+
+                <div class="section-title">➕ Создать заявку на игру</div>
+                <button class="btn-main" style="background:#2b5278;" onclick="createPvPRequest()">Кинуть заявку в сеть</button>
+            </div>
+        </div>
+
+        <!-- 2. Магазин -->
+        <div id="tab-shop" class="tab-page">
+            <div class="section-title">🎨 Скины на Крестики и Нолики</div>
+            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                <div>⚡ / 💀 "Огонь и Смерть"</div>
+                <button class="btn-main" style="width:auto; padding:8px 12px; margin:0;" onclick="buySkin('⚡', '💀', 200)">200 🪙</button>
+            </div>
+            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                <div>🔥 / 👑 "Короли"</div>
+                <button class="btn-main" style="width:auto; padding:8px 12px; margin:0;" onclick="buySkin('🔥', '👑', 500)">500 🪙</button>
+            </div>
+        </div>
+
+        <!-- 3. Лидерборд -->
+        <div id="tab-top" class="tab-page">
+            <div class="section-title">🏆 Топ игроков (Реальные игроки)</div>
+            <div id="leaderboard-list">
+                <div class="card">1. @alex_pro — 42 победы</div>
+                <div class="card">2. @player1337 — 38 побед</div>
+            </div>
+        </div>
+
+        <!-- 4. Профиль -->
+        <div id="tab-profile" class="tab-page">
+            <div class="card" style="text-align:center;">
+                <h2 id="prof-username">Игрок</h2>
+                <div style="margin:10px 0; color:#2ea6ff; font-weight:bold;" id="prof-level">Уровень: 1 / 100</div>
+                <div class="progress-bar"><div class="progress-fill" id="xp-fill"></div></div>
+                <div style="font-size:12px; margin-top:5px; color:#8e9499;" id="prof-xp">0 / 100 XP</div>
+            </div>
+            <div class="card">
+                <div>💰 Креликов: <b id="prof-balance">100</b></div>
+                <div>🏆 Побед: <b id="prof-wins">0</b></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Модалка выбора сложности -->
+    <div class="modal" id="diff-modal">
+        <div class="modal-content">
+            <h3>Выбери сложность ИИ</h3>
+            <button class="btn-diff" onclick="startGame('easy')">🟢 Легкий (+100 XP)</button>
+            <button class="btn-diff" onclick="startGame('medium')">🟡 Средний (+100 XP)</button>
+            <button class="btn-diff" onclick="startGame('hard')">🔴 Хард (+100 XP)</button>
+            <button class="btn-diff" style="background:#444;" onclick="closeDiffModal()">Отмена</button>
+        </div>
+    </div>
+
+    <!-- Нижний Navbar -->
+    <div class="navbar">
+        <button class="nav-item active" onclick="switchTab('home', this)"><span>🏠</span>Главная</button>
+        <button class="nav-item" onclick="switchTab('shop', this)"><span>🛒</span>Магазин</button>
+        <button class="nav-item" onclick="switchTab('top', this)"><span>🏆</span>Лидерборд</button>
+        <button class="nav-item" onclick="switchTab('profile', this)"><span>👤</span>Профиль</button>
+    </div>
 
     <script>
         const tg = window.Telegram.WebApp;
-        tg.expand(); // Разворачивает Mini App на весь экран
+        tg.expand();
 
+        // Состояние пользователя
+        let user = {
+            name: tg.initDataUnsafe?.user?.username || tg.initDataUnsafe?.user?.first_name || "Игрок",
+            balance: 100,
+            level: 1,
+            xp: 0,
+            wins: 0,
+            skinX: '❌',
+            skinO: '⭕'
+        };
+
+        document.getElementById('top-username').innerText = user.name;
+        document.getElementById('prof-username').innerText = user.name;
+
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.tab-page').forEach(page => page.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            el.classList.add('active');
+        }
+
+        function openDifficultyModal() { document.getElementById('diff-modal').style.display = 'flex'; }
+        function closeDiffModal() { document.getElementById('diff-modal').style.display = 'none'; }
+
+        function addXP(amount) {
+            user.xp += amount;
+            if (user.xp >= 100) {
+                user.level = Math.min(100, user.level + Math.floor(user.xp / 100));
+                user.xp = user.xp % 100;
+            }
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById('top-balance').innerText = user.balance;
+            document.getElementById('prof-balance').innerText = user.balance;
+            document.getElementById('prof-wins').innerText = user.wins;
+            document.getElementById('prof-level').innerText = `Уровень: ${user.level} / 100`;
+            document.getElementById('prof-xp').innerText = `${user.xp} / 100 XP`;
+            document.getElementById('xp-fill').style.width = user.xp + '%';
+        }
+
+        // Логика игры
         let boardState = ['', '', '', '', '', '', '', '', ''];
-        let gameOver = false;
+        let activeGame = false;
 
-        const boardEl = document.getElementById('board');
-        const statusEl = document.getElementById('status');
+        function startGame(diff) {
+            closeDiffModal();
+            document.getElementById('pvp-section').style.display = 'none';
+            document.getElementById('game-area').style.display = 'block';
+            boardState = ['', '', '', '', '', '', '', '', ''];
+            activeGame = true;
+            renderBoard();
+        }
 
-        function createBoard() {
+        function renderBoard() {
+            const boardEl = document.getElementById('board');
             boardEl.innerHTML = '';
             boardState.forEach((val, idx) => {
                 const cell = document.createElement('div');
                 cell.classList.add('cell');
                 cell.innerText = val;
-                cell.addEventListener('click', () => makeMove(idx));
+                cell.onclick = () => makeMove(idx);
                 boardEl.appendChild(cell);
             });
         }
 
         function makeMove(idx) {
-            if (boardState[idx] !== '' || gameOver) return;
+            if (boardState[idx] !== '' || !activeGame) return;
+            boardState[idx] = user.skinX;
+            renderBoard();
             
-            boardState[idx] = '❌';
-            createBoard();
-
-            if (checkWin('❌')) {
-                statusEl.innerText = '🎉 Ты победил!';
-                gameOver = true;
+            if (checkWin(user.skinX)) {
+                endGame("🎉 Победа! +50 🪙 и +100 XP");
+                user.balance += 50;
+                user.wins += 1;
+                addXP(100);
                 return;
             }
-
-            if (!boardState.includes('')) {
-                statusEl.innerText = '🤝 Ничья!';
-                gameOver = true;
-                return;
-            }
-
-            statusEl.innerText = 'Ход бота...';
-            setTimeout(botMove, 400);
+            
+            setTimeout(botMove, 300);
         }
 
         function botMove() {
-            let emptyIndices = boardState.map((val, idx) => val === '' ? idx : null).filter(val => val !== null);
-            if (emptyIndices.length === 0 || gameOver) return;
+            let empties = boardState.map((v, i) => v === '' ? i : null).filter(v => v !== null);
+            if (empties.length === 0 || !activeGame) return;
+            let move = empties[Math.floor(Math.random() * empties.length)];
+            boardState[move] = user.skinO;
+            renderBoard();
+            if (checkWin(user.skinO)) endGame("🤖 Бот победил!");
+        }
 
-            let randomIdx = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
-            boardState[randomIdx] = '⭕';
-            createBoard();
+        function checkWin(sym) {
+            const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+            return wins.some(c => c.every(i => boardState[i] === sym));
+        }
 
-            if (checkWin('⭕')) {
-                statusEl.innerText = '🤖 Бот победил!';
-                gameOver = true;
+        function endGame(msg) {
+            document.getElementById('game-status').innerText = msg;
+            activeGame = false;
+        }
+
+        function quitGame() {
+            document.getElementById('game-area').style.display = 'none';
+            document.getElementById('pvp-section').style.display = 'block';
+        }
+
+        function createPvPRequest() {
+            alert("Заявка создана! Ожидаем игроков онлайн...");
+            addXP(200); // +200 XP за PvP матчи
+        }
+
+        function buySkin(x, o, price) {
+            if (user.balance >= price) {
+                user.balance -= price;
+                user.skinX = x;
+                user.skinO = o;
+                alert("Скин успешно куплен и экипирован!");
+                updateUI();
             } else {
-                statusEl.innerText = 'Твой ход!';
+                alert("Не хватает Креликов!");
             }
         }
 
-        function checkWin(symbol) {
-            const wins = [
-                [0,1,2], [3,4,5], [6,7,8],
-                [0,3,6], [1,4,7], [2,5,8],
-                [0,4,8], [2,4,6]
-            ];
-            return wins.some(comb => comb.every(idx => boardState[idx] === symbol));
-        }
-
-        function resetGame() {
-            boardState = ['', '', '', '', '', '', '', '', ''];
-            gameOver = false;
-            statusEl.innerText = 'Твой ход!';
-            createBoard();
-        }
-
-        createBoard();
+        updateUI();
     </script>
 </body>
-</html>
+    </html>
+    
