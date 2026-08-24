@@ -2,14 +2,447 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Тест</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Tic-Tac-Toe</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #17212b;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #232e3c;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .user-info {
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        .currency {
+            background: rgba(46, 166, 255, 0.15);
+            color: #2ea6ff;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            padding-bottom: 80px;
+        }
+
+        .tab-page {
+            display: none;
+        }
+
+        .tab-page.active {
+            display: block;
+        }
+
+        .btn-main {
+            width: 100%;
+            padding: 14px;
+            background: #2ea6ff;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 16px;
+            cursor: pointer;
+        }
+
+        .btn-main:active {
+            opacity: 0.8;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 16px 0 10px;
+            color: #8e9499;
+        }
+
+        .card {
+            background: #232e3c;
+            padding: 14px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 300px;
+            margin: 15px auto;
+        }
+
+        .cell {
+            aspect-ratio: 1;
+            background: #232e3c;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: #232e3c;
+            padding: 20px;
+            border-radius: 16px;
+            width: 85%;
+            max-width: 340px;
+            text-align: center;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #2ea6ff;
+            background: #17212b;
+            color: white;
+            font-size: 18px;
+            text-align: center;
+            margin: 15px 0;
+            outline: none;
+        }
+
+        .btn-diff {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 10px;
+            border: none;
+            font-weight: bold;
+            background: #2b5278;
+            color: white;
+            cursor: pointer;
+        }
+
+        .navbar {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            height: 65px;
+            background: #232e3c;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #708499;
+            font-size: 11px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .nav-item.active {
+            color: #2ea6ff;
+        }
+
+        .nav-item span {
+            font-size: 20px;
+            margin-bottom: 2px;
+        }
+    </style>
 </head>
-<body style="background: #17212b; color: white; text-align: center; padding-top: 100px; font-family: sans-serif;">
-    <h1>Проверка хостинга</h1>
-    <p>Если вы это видите, сайт работает!</p>
-    <br>
-    <button onclick="alert('Клик прошёл успешно!')" style="padding: 15px 30px; font-size: 18px; background: #2ea6ff; color: white; border: none; border-radius: 10px; cursor: pointer;">
-        Нажми на меня
-    </button>
+<body>
+
+    <div class="top-bar">
+        <div class="user-info" id="top-username">Игрок</div>
+        <div class="currency">🪙 <span id="top-balance">100</span> Креликов</div>
+    </div>
+
+    <div class="content">
+        <!-- Главная -->
+        <div id="tab-home" class="tab-page active">
+            <button class="btn-main" id="btn-play-ai">🤖 Играть с ИИ</button>
+            
+            <div id="game-area" style="display:none;">
+                <div style="text-align:center; margin-bottom:10px; font-size:14px; color:#8e9499;">
+                    Твой символ: <b id="player-symbol-display" style="color:#fff; font-size:18px;">❌</b>
+                </div>
+                <div class="board" id="board"></div>
+                <div style="text-align:center; margin-top:10px; font-weight:bold; font-size:16px;" id="game-status">Ожидание...</div>
+                <button class="btn-main" style="margin-top:15px; background:#e53935;" id="btn-quit">Сдаться / Выйти</button>
+            </div>
+
+            <div id="pvp-section">
+                <div class="section-title">⚔️ Активные заявки (Онлайн дуэли)</div>
+                <div id="requests-list"></div>
+
+                <div class="section-title">➕ Создать заявку</div>
+                <button class="btn-main" style="background:#2b5278;" id="btn-open-bet">Опубликовать заявку (+200 XP)</button>
+            </div>
+        </div>
+
+        <!-- Магазин -->
+        <div id="tab-shop" class="tab-page">
+            <div class="section-title">🛒 Магазин скинов</div>
+            <div class="card">
+                <p>Скоро здесь появятся уникальные скины для крестиков и ноликов!</p>
+            </div>
+        </div>
+
+        <!-- Топ -->
+        <div id="tab-top" class="tab-page">
+            <div class="section-title">🏆 Топ игроков</div>
+            <div class="card">1. 🥇 @alex_pro — 42 победы</div>
+            <div class="card">2. 🥈 @dark_lord — 31 победа</div>
+        </div>
+
+        <!-- Профиль -->
+        <div id="tab-profile" class="tab-page">
+            <div class="card" style="text-align:center;">
+                <h2 id="prof-username">Игрок</h2>
+                <div style="margin:10px 0; color:#2ea6ff; font-weight:bold;" id="prof-level">Уровень: 1 / 100</div>
+                <div>💰 Баланс: <b id="prof-balance">100</b> Креликов</div>
+                <div>🏆 Всего побед: <b id="prof-wins">0</b></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модалка выбора ставки -->
+    <div class="modal" id="bet-modal">
+        <div class="modal-content">
+            <h3>Создать заявку</h3>
+            <input type="number" id="bet-input-field" class="modal-input" value="50">
+            <button class="btn-main" id="btn-confirm-bet">Опубликовать</button>
+            <button class="btn-diff" id="btn-close-bet" style="background:#444;">Отмена</button>
+        </div>
+    </div>
+
+    <!-- Навигация -->
+    <div class="navbar">
+        <button class="nav-item active" data-tab="home"><span>🏠</span>Главная</button>
+        <button class="nav-item" data-tab="shop"><span>🛒</span>Магазин</button>
+        <button class="nav-item" data-tab="top"><span>🏆</span>Лидерборд</button>
+        <button class="nav-item" data-tab="profile"><span>👤</span>Профиль</button>
+    </div>
+
+    <script>
+        // Инициализация Telegram WebApp с защитой от ошибок
+        var tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+        }
+
+        var user = {
+            name: "Игрок",
+            balance: 100,
+            level: 1,
+            wins: 0
+        };
+
+        // Если бот запущен в Telegram, берем имя пользователя
+        if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            if (tg.initDataUnsafe.user.username) {
+                user.name = '@' + tg.initDataUnsafe.user.username;
+            } else if (tg.initDataUnsafe.user.first_name) {
+                user.name = tg.initDataUnsafe.user.first_name;
+            }
+        }
+
+        // Обновление интерфейса
+        function updateUI() {
+            document.getElementById('top-username').innerText = user.name;
+            document.getElementById('prof-username').innerText = user.name;
+            document.getElementById('top-balance').innerText = user.balance;
+            document.getElementById('prof-balance').innerText = user.balance;
+            document.getElementById('prof-wins').innerText = user.wins;
+        }
+        updateUI();
+
+        // Переключение вкладок через надежные слушатели событий
+        var navButtons = document.querySelectorAll('.nav-item');
+        for (var i = 0; i < navButtons.length; i++) {
+            navButtons[i].addEventListener('click', function() {
+                var tabId = this.getAttribute('data-tab');
+                
+                // Убираем active со всех
+                var pages = document.querySelectorAll('.tab-page');
+                for (var p = 0; p < pages.length; p++) {
+                    pages[p].classList.remove('active');
+                }
+                for (var n = 0; n < navButtons.length; n++) {
+                    navButtons[n].classList.remove('active');
+                }
+
+                // Включаем нужную
+                document.getElementById('tab-' + tabId).classList.add('active');
+                this.classList.add('active');
+            });
+        }
+
+        // Логика игры с ИИ
+        var boardState = ['', '', '', '', '', '', '', '', ''];
+        var activeGame = false;
+        var isMyTurn = true;
+
+        document.getElementById('btn-play-ai').addEventListener('click', function() {
+            document.getElementById('pvp-section').style.display = 'none';
+            document.getElementById('game-area').style.display = 'block';
+            startAiGame();
+        });
+
+        document.getElementById('btn-quit').addEventListener('click', function() {
+            document.getElementById('game-area').style.display = 'none';
+            document.getElementById('pvp-section').style.display = 'block';
+        });
+
+        function startAiGame() {
+            boardState = ['', '', '', '', '', '', '', '', ''];
+            activeGame = true;
+            isMyTurn = true;
+            document.getElementById('game-status').innerText = "Твой ход (❌)";
+            renderBoard();
+        }
+
+        function renderBoard() {
+            var boardEl = document.getElementById('board');
+            boardEl.innerHTML = '';
+            for (var i = 0; i < 9; i++) {
+                var cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.innerText = boardState[i];
+                cell.setAttribute('data-index', i);
+                
+                cell.addEventListener('click', function() {
+                    var idx = parseInt(this.getAttribute('data-index'));
+                    if (!activeGame || !isMyTurn || boardState[idx] !== '') return;
+
+                    boardState[idx] = '❌';
+                    renderBoard();
+
+                    if (checkWin('❌')) {
+                        document.getElementById('game-status').innerText = "🎉 Ты победил!";
+                        user.balance += 50;
+                        user.wins += 1;
+                        updateUI();
+                        activeGame = false;
+                        return;
+                    }
+
+                    if (isBoardFull()) {
+                        document.getElementById('game-status').innerText = "🤝 Ничья!";
+                        activeGame = false;
+                        return;
+                    }
+
+                    isMyTurn = false;
+                    document.getElementById('game-status').innerText = "ИИ думает...";
+                    
+                    setTimeout(aiMove, 600);
+                });
+
+                boardEl.appendChild(cell);
+            }
+        }
+
+        function aiMove() {
+            if (!activeGame) return;
+            var empties = [];
+            for (var i = 0; i < 9; i++) {
+                if (boardState[i] === '') empties.push(i);
+            }
+            if (empties.length === 0) return;
+
+            var randomIdx = empties[Math.floor(Math.random() * empties.length)];
+            boardState[randomIdx] = '⭕';
+            renderBoard();
+
+            if (checkWin('⭕')) {
+                document.getElementById('game-status').innerText = "🤖 ИИ победил!";
+                activeGame = false;
+                return;
+            }
+
+            if (isBoardFull()) {
+                document.getElementById('game-status').innerText = "🤝 Ничья!";
+                activeGame = false;
+                return;
+            }
+
+            isMyTurn = true;
+            document.getElementById('game-status').innerText = "Твой ход (❌)";
+        }
+
+        function isBoardFull() {
+            for (var i = 0; i < 9; i++) {
+                if (boardState[i] === '') return false;
+            }
+            return true;
+        }
+
+        function checkWin(sym) {
+            var wins = [
+                [0,1,2], [3,4,5], [6,7,8], // ряды
+                [0,3,6], [1,4,7], [2,5,8], // колонки
+                [0,4,8], [2,4,6]           // диагонали
+            ];
+            for (var i = 0; i < wins.length; i++) {
+                var c = wins[i];
+                if (boardState[c[0]] === sym && boardState[c[1]] === sym && boardState[c[2]] === sym) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Кнопка модалки создания заявки
+        document.getElementById('btn-open-bet').addEventListener('click', function() {
+            document.getElementById('bet-modal').style.display = 'flex';
+        });
+        document.getElementById('btn-close-bet').addEventListener('click', function() {
+            document.getElementById('bet-modal').style.display = 'none';
+        });
+        document.getElementById('btn-confirm-bet').addEventListener('click', function() {
+            alert('Заявка успешно создана!');
+            document.getElementById('bet-modal').style.display = 'none';
+        });
+    </script>
 </body>
 </html>
