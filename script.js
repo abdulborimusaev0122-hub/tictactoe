@@ -56,6 +56,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const coinResultText = document.getElementById("coin-result-text");
     const btnGoGame = document.getElementById("btn-go-game");
 
+    // МОДАЛЬНОЕ ОКНО РЕЗУЛЬТАТА
+    const resultModal = document.getElementById("result-modal");
+    const resIcon = document.getElementById("res-icon");
+    const resTitle = document.getElementById("res-title");
+    const resReward = document.getElementById("res-reward");
+    const btnHome = document.getElementById("btn-home");
+
     const btnOpenAiSetup = document.getElementById("btn-open-ai-setup");
     const btnCloseSetup = document.getElementById("btn-close-setup");
     const btnStartAiCoin = document.getElementById("btn-start-ai-coin");
@@ -198,7 +205,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (gameState.aiDifficulty === "easy") {
             chosenIndex = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
         } else {
-            // Умный ИИ
             chosenIndex = findBestMove(emptyIndices);
         }
 
@@ -215,24 +221,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function findBestMove(emptyIndices) {
-        // 1. Попробовать победить сразу
         for (let idx of emptyIndices) {
             let tempBoard = [...gameState.board];
             tempBoard[idx] = gameState.aiSymbol;
             if (checkWin(tempBoard, gameState.aiSymbol)) return idx;
         }
 
-        // 2. Заблокировать победу игрока
         for (let idx of emptyIndices) {
             let tempBoard = [...gameState.board];
             tempBoard[idx] = gameState.mySymbol;
             if (checkWin(tempBoard, gameState.mySymbol)) return idx;
         }
 
-        // 3. Занять центр
         if (emptyIndices.includes(4)) return 4;
 
-        // 4. Случайный ход
         return emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
     }
 
@@ -247,19 +249,41 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // --- ОКОНЧАНИЕ ИГРЫ И ОКНО РЕЗУЛЬТАТА ---
     function endGame(result) {
         gameState.gameActive = false;
-        if (result === "win") {
-            gameStatus.textContent = "🎉 Вы победили! (+50 монет)";
-            userData.balance += 50;
-            userData.wins += 1;
-        } else if (result === "lose") {
-            gameStatus.textContent = "❌ Вы проиграли!";
-        } else {
-            gameStatus.textContent = "🤝 Ничья!";
-        }
-        updateUI();
+        
+        setTimeout(() => {
+            if (result === "win") {
+                resIcon.textContent = "🏆";
+                resTitle.textContent = "Победа!";
+                resTitle.style.color = "#55efc4";
+                resReward.textContent = "+50 монет 🪙";
+                userData.balance += 50;
+                userData.wins += 1;
+            } else if (result === "lose") {
+                resIcon.textContent = "💀";
+                resTitle.textContent = "Поражение!";
+                resTitle.style.color = "#ff7675";
+                resReward.textContent = "0 монет (попробуй еще!)";
+            } else {
+                resIcon.textContent = "🤝";
+                resTitle.textContent = "Ничья!";
+                resTitle.style.color = "#ffeaa7";
+                resReward.textContent = "+10 монет 🪙";
+                userData.balance += 10;
+            }
+            
+            updateUI();
+            resultModal.style.display = "flex";
+        }, 400);
     }
+
+    btnHome.addEventListener("click", () => {
+        resultModal.style.display = "none";
+        gameArea.style.display = "none";
+        pvpSection.style.display = "block";
+    });
 
     btnQuit.addEventListener("click", () => {
         gameState.gameActive = false;
@@ -321,7 +345,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Инициализация при старте
     updateUI();
 });
-      
+            
