@@ -19,9 +19,10 @@ document.addEventListener("DOMContentLoaded", () => {
     let gameState = {
         board: ["", "", "", "", "", "", "", "", ""],
         mySymbol: "❌",
-        aiSymbol: "⭕",
+        opponentSymbol: "⭕",
         isMyTurn: true,
         gameActive: false,
+        gameMode: "ai", // "ai" или "pvp"
         aiDifficulty: "easy"
     };
 
@@ -69,15 +70,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnDiffEasy = document.getElementById("diff-easy");
     const btnDiffHard = document.getElementById("diff-hard");
     const btnQuit = document.getElementById("btn-quit");
+    
+    // Кнопка поиска реального игрока (PvP)
+    const btnFindPvp = document.getElementById("btn-find-pvp");
 
     // --- ОБНОВЛЕНИЕ ИНТЕРФЕЙСА ---
     function updateUI() {
-        topUsername.textContent = userData.name;
-        topBalance.textContent = userData.balance;
-        profUsername.textContent = userData.name;
-        profBalance.textContent = userData.balance;
-        profWins.textContent = userData.wins;
-        profSkin.textContent = `${userData.equippedSkin.x} / ${userData.equippedSkin.o}`;
+        if (topUsername) topUsername.textContent = userData.name;
+        if (topBalance) topBalance.textContent = userData.balance;
+        if (profUsername) profUsername.textContent = userData.name;
+        if (profBalance) profBalance.textContent = userData.balance;
+        if (profWins) profWins.textContent = userData.wins;
+        if (profSkin) profSkin.textContent = `${userData.equippedSkin.x} / ${userData.equippedSkin.o}`;
         renderShop();
     }
 
@@ -90,59 +94,101 @@ document.addEventListener("DOMContentLoaded", () => {
             tabPages.forEach(p => p.classList.remove("active"));
 
             btn.classList.add("active");
-            document.getElementById(`tab-${targetTab}`).classList.add("active");
+            const targetPage = document.getElementById(`tab-${targetTab}`);
+            if (targetPage) targetPage.classList.add("active");
         });
     });
 
     // --- НАСТРОЙКА ИИ И СЛОЖНОСТИ ---
-    btnOpenAiSetup.addEventListener("click", () => {
-        aiSetupModal.style.display = "flex";
-    });
+    if (btnOpenAiSetup) {
+        btnOpenAiSetup.addEventListener("click", () => {
+            gameState.gameMode = "ai";
+            aiSetupModal.style.display = "flex";
+        });
+    }
 
-    btnCloseSetup.addEventListener("click", () => {
-        aiSetupModal.style.display = "none";
-    });
+    if (btnCloseSetup) {
+        btnCloseSetup.addEventListener("click", () => {
+            aiSetupModal.style.display = "none";
+        });
+    }
 
-    btnDiffEasy.addEventListener("click", () => {
-        gameState.aiDifficulty = "easy";
-        btnDiffEasy.classList.add("selected");
-        btnDiffHard.classList.remove("selected");
-    });
+    if (btnDiffEasy) {
+        btnDiffEasy.addEventListener("click", () => {
+            gameState.aiDifficulty = "easy";
+            btnDiffEasy.classList.add("selected");
+            if (btnDiffHard) btnDiffHard.classList.remove("selected");
+        });
+    }
 
-    btnDiffHard.addEventListener("click", () => {
-        gameState.aiDifficulty = "hard";
-        btnDiffHard.classList.add("selected");
-        btnDiffEasy.classList.remove("selected");
-    });
+    if (btnDiffHard) {
+        btnDiffHard.addEventListener("click", () => {
+            gameState.aiDifficulty = "hard";
+            btnDiffHard.classList.add("selected");
+            if (btnDiffEasy) btnDiffEasy.classList.remove("selected");
+        });
+    }
 
-    // --- ЖРЕБИЙ (ПОДБРОС МОНЕТКИ) ---
-    btnStartAiCoin.addEventListener("click", () => {
-        aiSetupModal.style.display = "none";
-        coinModal.style.display = "flex";
-        coinResultText.textContent = "🪙 Подбрасываем монетку...";
-        btnGoGame.style.display = "none";
+    // --- СТАРТ PvP ИГРЫ (С РЕАЛЬНЫМ ИГРОКОМ) ---
+    if (btnFindPvp) {
+        btnFindPvp.addEventListener("click", () => {
+            gameState.gameMode = "pvp";
+            
+            // Запуск жребия для PvP
+            coinModal.style.display = "flex";
+            coinResultText.textContent = "🔍 Ищем соперника...";
+            btnGoGame.style.display = "none";
 
-        setTimeout(() => {
-            const coinFlip = Math.random() < 0.5;
-            if (coinFlip) {
-                gameState.mySymbol = userData.equippedSkin.x;
-                gameState.aiSymbol = userData.equippedSkin.o;
-                gameState.isMyTurn = true;
-                coinResultText.textContent = "🎉 Орел! Вы ходите первым!";
-            } else {
-                gameState.mySymbol = userData.equippedSkin.o;
-                gameState.aiSymbol = userData.equippedSkin.x;
-                gameState.isMyTurn = false;
-                coinResultText.textContent = "🤖 Решка! Первым ходит ИИ!";
-            }
-            btnGoGame.style.display = "inline-block";
-        }, 1200);
-    });
+            setTimeout(() => {
+                const coinFlip = Math.random() < 0.5;
+                if (coinFlip) {
+                    gameState.mySymbol = userData.equippedSkin.x;
+                    gameState.opponentSymbol = userData.equippedSkin.o;
+                    gameState.isMyTurn = true;
+                    coinResultText.textContent = "⚔️ Соперник найден! Вы ходите первым!";
+                } else {
+                    gameState.mySymbol = userData.equippedSkin.o;
+                    gameState.opponentSymbol = userData.equippedSkin.x;
+                    gameState.isMyTurn = false;
+                    coinResultText.textContent = "⚔️ Соперник найден! Первым ходит соперник!";
+                }
+                btnGoGame.style.display = "inline-block";
+            }, 1500);
+        });
+    }
 
-    btnGoGame.addEventListener("click", () => {
-        coinModal.style.display = "none";
-        startNewGame();
-    });
+    // --- ЖРЕБИЙ (ДЛЯ ИИ) ---
+    if (btnStartAiCoin) {
+        btnStartAiCoin.addEventListener("click", () => {
+            aiSetupModal.style.display = "none";
+            coinModal.style.display = "flex";
+            coinResultText.textContent = "🪙 Подбрасываем монетку...";
+            btnGoGame.style.display = "none";
+
+            setTimeout(() => {
+                const coinFlip = Math.random() < 0.5;
+                if (coinFlip) {
+                    gameState.mySymbol = userData.equippedSkin.x;
+                    gameState.opponentSymbol = userData.equippedSkin.o;
+                    gameState.isMyTurn = true;
+                    coinResultText.textContent = "🎉 Орел! Вы ходите первым!";
+                } else {
+                    gameState.mySymbol = userData.equippedSkin.o;
+                    gameState.opponentSymbol = userData.equippedSkin.x;
+                    gameState.isMyTurn = false;
+                    coinResultText.textContent = "🤖 Решка! Первым ходит ИИ!";
+                }
+                btnGoGame.style.display = "inline-block";
+            }, 1200);
+        });
+    }
+
+    if (btnGoGame) {
+        btnGoGame.addEventListener("click", () => {
+            coinModal.style.display = "none";
+            startNewGame();
+        });
+    }
 
     // --- ЛОГИКА ИГРЫ ---
     function startNewGame() {
@@ -152,7 +198,7 @@ document.addEventListener("DOMContentLoaded", () => {
         pvpSection.style.display = "none";
         gameArea.style.display = "block";
         
-        playerSymbolDisplay.textContent = gameState.mySymbol;
+        if (playerSymbolDisplay) playerSymbolDisplay.textContent = gameState.mySymbol;
         
         cells.forEach(cell => {
             cell.textContent = "";
@@ -161,8 +207,10 @@ document.addEventListener("DOMContentLoaded", () => {
         if (gameState.isMyTurn) {
             gameStatus.textContent = "Ваш ход";
         } else {
-            gameStatus.textContent = "Ход ИИ...";
-            setTimeout(makeAiMove, 600);
+            gameStatus.textContent = gameState.gameMode === "ai" ? "Ход ИИ..." : "Ход соперника...";
+            if (gameState.gameMode === "ai") {
+                setTimeout(makeAiMove, 600);
+            }
         }
     }
 
@@ -179,8 +227,15 @@ document.addEventListener("DOMContentLoaded", () => {
                     endGame("draw");
                 } else {
                     gameState.isMyTurn = false;
-                    gameStatus.textContent = "Ход ИИ...";
-                    setTimeout(makeAiMove, 600);
+                    
+                    if (gameState.gameMode === "ai") {
+                        gameStatus.textContent = "Ход ИИ...";
+                        setTimeout(makeAiMove, 600);
+                    } else {
+                        gameStatus.textContent = "Ход соперника...";
+                        // Имитация хода соперника в PvP режиме
+                        setTimeout(makePvpOpponentMove, 1000);
+                    }
                 }
             }
         });
@@ -191,6 +246,7 @@ document.addEventListener("DOMContentLoaded", () => {
         cells[index].textContent = symbol;
     }
 
+    // ИИ Ход
     function makeAiMove() {
         if (!gameState.gameActive) return;
 
@@ -201,16 +257,38 @@ document.addEventListener("DOMContentLoaded", () => {
         if (emptyIndices.length === 0) return;
 
         let chosenIndex;
-
         if (gameState.aiDifficulty === "easy") {
             chosenIndex = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
         } else {
             chosenIndex = findBestMove(emptyIndices);
         }
 
-        makeMove(chosenIndex, gameState.aiSymbol);
+        makeMove(chosenIndex, gameState.opponentSymbol);
 
-        if (checkWin(gameState.board, gameState.aiSymbol)) {
+        if (checkWin(gameState.board, gameState.opponentSymbol)) {
+            endGame("lose");
+        } else if (gameState.board.every(c => c !== "")) {
+            endGame("draw");
+        } else {
+            gameState.isMyTurn = true;
+            gameStatus.textContent = "Ваш ход";
+        }
+    }
+
+    // Ход соперника в PvP
+    function makePvpOpponentMove() {
+        if (!gameState.gameActive) return;
+
+        let emptyIndices = gameState.board
+            .map((val, idx) => val === "" ? idx : null)
+            .filter(val => val !== null);
+
+        if (emptyIndices.length === 0) return;
+
+        let chosenIndex = findBestMove(emptyIndices);
+        makeMove(chosenIndex, gameState.opponentSymbol);
+
+        if (checkWin(gameState.board, gameState.opponentSymbol)) {
             endGame("lose");
         } else if (gameState.board.every(c => c !== "")) {
             endGame("draw");
@@ -223,8 +301,8 @@ document.addEventListener("DOMContentLoaded", () => {
     function findBestMove(emptyIndices) {
         for (let idx of emptyIndices) {
             let tempBoard = [...gameState.board];
-            tempBoard[idx] = gameState.aiSymbol;
-            if (checkWin(tempBoard, gameState.aiSymbol)) return idx;
+            tempBoard[idx] = gameState.opponentSymbol;
+            if (checkWin(tempBoard, gameState.opponentSymbol)) return idx;
         }
 
         for (let idx of emptyIndices) {
@@ -249,7 +327,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // --- ОКОНЧАНИЕ ИГРЫ И ОКНО РЕЗУЛЬТАТА ---
+    // --- УНИВЕРСАЛЬНОЕ ОКОНЧАНИЕ ИГРЫ (ИИ И PvP) ---
     function endGame(result) {
         gameState.gameActive = false;
         
@@ -258,8 +336,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 resIcon.textContent = "🏆";
                 resTitle.textContent = "Победа!";
                 resTitle.style.color = "#55efc4";
-                resReward.textContent = "+50 монет 🪙";
-                userData.balance += 50;
+                
+                // Награда выше за PvP
+                const reward = gameState.gameMode === "pvp" ? 100 : 50;
+                resReward.textContent = `+${reward} монет 🪙`;
+                userData.balance += reward;
                 userData.wins += 1;
             } else if (result === "lose") {
                 resIcon.textContent = "💀";
@@ -275,25 +356,31 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             
             updateUI();
-            resultModal.style.display = "flex";
+            if (resultModal) resultModal.style.display = "flex";
         }, 400);
     }
 
-    btnHome.addEventListener("click", () => {
-        resultModal.style.display = "none";
-        gameArea.style.display = "none";
-        pvpSection.style.display = "block";
-    });
+    if (btnHome) {
+        btnHome.addEventListener("click", () => {
+            if (resultModal) resultModal.style.display = "none";
+            gameArea.style.display = "none";
+            pvpSection.style.display = "block";
+        });
+    }
 
-    btnQuit.addEventListener("click", () => {
-        gameState.gameActive = false;
-        gameArea.style.display = "none";
-        pvpSection.style.display = "block";
-    });
+    if (btnQuit) {
+        btnQuit.addEventListener("click", () => {
+            gameState.gameActive = false;
+            gameArea.style.display = "none";
+            pvpSection.style.display = "block";
+        });
+    }
 
     // --- МАГАЗИН СКИНОВ ---
     function renderShop() {
         const shopList = document.getElementById("shop-list");
+        if (!shopList) return;
+        
         shopList.innerHTML = "";
 
         skinsCatalog.forEach(skin => {
@@ -347,4 +434,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
     updateUI();
 });
-            
+                
