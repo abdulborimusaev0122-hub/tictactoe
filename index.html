@@ -10,6 +10,7 @@
 <body>
 
     <div class="app-container">
+        <!-- ВЕРХНЯЯ ПАНЕЛЬ -->
         <header class="header">
             <div class="user-info">
                 <span id="top-username">Игрок</span>
@@ -20,6 +21,7 @@
             </div>
         </header>
 
+        <!-- ОСНОВНОЙ КОНТЕНТ -->
         <main class="content">
             <section id="tab-game" class="tab-page active">
                 <div id="pvp-section">
@@ -27,12 +29,14 @@
                         <h2>Аркадная Дуэль</h2>
                         <p>Играй с ботом или бросай вызов реальным игрокам!</p>
                         <button id="btn-open-ai-setup" class="btn-primary">🎮 Играть с ИИ</button>
+                        <button id="btn-find-pvp" class="btn-primary" style="margin-top: 10px; background: #6c5ce7;">⚔️ Играть с Игроком</button>
                     </div>
 
                     <h3 style="margin: 15px 0 10px 0;">Игроки онлайн</h3>
                     <div id="online-players-list"></div>
                 </div>
 
+                <!-- ЭКРАН ИГРЫ -->
                 <div id="game-area" style="display: none;">
                     <div class="game-header">
                         <button id="btn-quit" class="btn-secondary">⬅️ Назад</button>
@@ -56,18 +60,21 @@
                 </div>
             </section>
 
+            <!-- МАГАЗИН -->
             <section id="tab-shop" class="tab-page">
                 <h2>Магазин скинов</h2>
                 <p class="subtitle">Покупай уникальные наборы иконок!</p>
                 <div id="shop-list" class="shop-grid"></div>
             </section>
 
+            <!-- ЛИДЕРБОРД -->
             <section id="tab-leaderboard" class="tab-page">
                 <h2>Таблица лидеров</h2>
                 <p class="subtitle">Топ лучших игроков</p>
                 <div id="leaderboard-list"></div>
             </section>
 
+            <!-- ПРОФИЛЬ -->
             <section id="tab-profile" class="tab-page">
                 <div class="profile-card card">
                     <div class="avatar-big">👤</div>
@@ -90,6 +97,7 @@
             </section>
         </main>
 
+        <!-- НИЖНЯЯ ПАНЕЛЬ -->
         <nav class="nav-bar">
             <button class="nav-item active" data-tab="game">
                 <span class="nav-icon">⚔️</span>
@@ -110,6 +118,7 @@
         </nav>
     </div>
 
+    <!-- МОДАЛЬНОЕ ОКНО: ВЫБОР СЛОЖНОСТИ -->
     <div id="ai-setup-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content">
             <h3>Выбор сложности ИИ</h3>
@@ -122,22 +131,16 @@
         </div>
     </div>
 
+    <!-- МОДАЛЬНОЕ ОКНО: ЖРЕБИЙ -->
     <div id="coin-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content text-center">
-            <h3>Жребий</h3>
+            <h3>ЖРЕБИЙ</h3>
             <div id="coin-result-text" style="font-size: 18px; margin: 20px 0;">🪙 Подбрасываем монетку...</div>
             <button id="btn-go-game" class="btn-primary" style="display: none;">В бой!</button>
         </div>
     </div>
 
-    <div id="challenge-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-content text-center">
-            <h3>Ожидание соперника</h3>
-            <div id="challenge-text" style="font-size: 16px; margin: 20px 0;">Отправляем вызов...</div>
-            <button id="btn-cancel-challenge" class="btn-secondary" style="width: 100%;">Отмена</button>
-        </div>
-    </div>
-        <!-- МОДАЛЬНОЕ ОКНО РЕЗУЛЬТАТА МАТЧА -->
+    <!-- МОДАЛЬНОЕ ОКНО: РЕЗУЛЬТАТ МАТЧА С ИКОНКОЙ И КНОПКОЙ ДОМОЙ -->
     <div id="result-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content text-center">
             <div id="res-icon" style="font-size: 60px; margin-bottom: 10px;">🏆</div>
@@ -146,9 +149,7 @@
             <button id="btn-home" class="btn-primary">🏠 Домой</button>
         </div>
     </div>
-    
 
     <script src="script.js"></script>
 </body>
 </html>
-
