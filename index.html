@@ -13,6 +13,7 @@
     margin: 0;
     padding: 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -75,6 +76,10 @@ body {
     cursor: pointer;
 }
 
+.btn-main:active {
+    opacity: 0.8;
+}
+
 .section-title {
     font-size: 16px;
     font-weight: bold;
@@ -129,24 +134,39 @@ body {
     font-size: 36px;
     font-weight: bold;
     user-select: none;
+    cursor: pointer;
 }
 
 .modal {
     display: none;
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.85);
     align-items: center;
     justify-content: center;
-    z-index: 100;
+    z-index: 1000;
 }
 
 .modal-content {
     background: var(--tg-theme-secondary-bg-color, #232e3c);
-    padding: 24px;
+    padding: 20px;
     border-radius: 16px;
     width: 85%;
+    max-width: 340px;
     text-align: center;
+}
+
+.modal-input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #2ea6ff;
+    background: #17212b;
+    color: white;
+    font-size: 18px;
+    text-align: center;
+    margin: 15px 0;
+    outline: none;
 }
 
 .btn-diff {
@@ -254,7 +274,7 @@ body {
                 <div id="requests-list"></div>
 
                 <div class="section-title">➕ Создать заявку</div>
-                <button class="btn-main" style="background:#2b5278;" onclick="createPvPRequest()">Опубликовать заявку (+200 XP)</button>
+                <button class="btn-main" style="background:#2b5278;" onclick="openBetModal()">Опубликовать заявку (+200 XP)</button>
             </div>
         </div>
 
@@ -312,11 +332,31 @@ body {
             <button class="btn-diff" onclick="selectDifficulty('easy')">🟢 Легкий (+100 XP)</button>
             <button class="btn-diff" onclick="selectDifficulty('medium')">🟡 Средний (+100 XP)</button>
             <button class="btn-diff" onclick="selectDifficulty('hard')">🔴 Хард (+100 XP)</button>
-            <button class="btn-diff" style="background:#444;" onclick="closeDiffModal()">Отмена</button>
+            <button class="btn-diff" style="background:#444;" onclick="closeModal('diff-modal')">Отмена</button>
         </div>
     </div>
 
-    <!-- Модалка Рулетки (Жеребьёвки) -->
+    <!-- Модалка Ввода ставки -->
+    <div class="modal" id="bet-modal">
+        <div class="modal-content">
+            <h3>Создать заявку</h3>
+            <p style="font-size:13px; color:#8e9499; margin-top:5px;">Укажите ставку в Креликах:</p>
+            <input type="number" id="bet-input-field" class="modal-input" value="50" min="10" step="10">
+            <button class="btn-main" style="margin-bottom:8px;" onclick="confirmCreatePvPRequest()">Опубликовать</button>
+            <button class="btn-diff" style="background:#444;" onclick="closeModal('bet-modal')">Отмена</button>
+        </div>
+    </div>
+
+    <!-- Модалка Уведомлений -->
+    <div class="modal" id="alert-modal">
+        <div class="modal-content">
+            <h3 id="alert-title">Уведомление</h3>
+            <p id="alert-text" style="margin: 15px 0; font-size:15px; color:#d1d5db;"></p>
+            <button class="btn-main" style="margin-bottom:0;" onclick="closeModal('alert-modal')">Понятно</button>
+        </div>
+    </div>
+
+    <!-- Модалка Рулетки -->
     <div class="modal" id="wheel-modal">
         <div class="modal-content">
             <h3>🎲 Жеребьёвка ходов</h3>
@@ -325,7 +365,7 @@ body {
         </div>
     </div>
 
-    <!-- Нижний Navbar -->
+    <!-- Navbar -->
     <div class="navbar">
         <button class="nav-item active" onclick="switchTab('home', this)"><span>🏠</span>Главная</button>
         <button class="nav-item" onclick="switchTab('shop', this)"><span>🛒</span>Магазин</button>
@@ -334,7 +374,6 @@ body {
     </div>
 
     <script src="script.js">
-    
         const tg = window.Telegram.WebApp;tg.expand();
 
 const ALL_SKINS = [
@@ -356,6 +395,16 @@ let user = {
     equippedO: '⭕',
     inventory: ['classic']
 };
+
+function showAlert(text, title = "Информация") {
+    document.getElementById('alert-title').innerText = title;
+    document.getElementById('alert-text').innerText = text;
+    document.getElementById('alert-modal').style.display = 'flex';
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
 
 function loadUserData() {
     const saved = localStorage.getItem('ttt_user_data');
@@ -409,7 +458,6 @@ function switchShopSub(type) {
 }
 
 function openDifficultyModal() { document.getElementById('diff-modal').style.display = 'flex'; }
-function closeDiffModal() { document.getElementById('diff-modal').style.display = 'none'; }
 
 function addXP(amount) {
     user.xp += amount;
@@ -479,10 +527,10 @@ function buySkin(skinId) {
         user.balance -= skin.price;
         user.inventory.push(skin.id);
         saveUserData();
-        alert(`Вы успешно купили "${skin.name}"!`);
+        showAlert(`Вы успешно купили "${skin.name}"!`, "Покупка");
         updateUI();
     } else {
-        alert("Не хватает Креликов!");
+        showAlert("У вас недостаточно Креликов!", "Ошибка");
     }
 }
 
@@ -492,7 +540,7 @@ function equipSkin(symbol, type) {
     saveUserData();
     updateUI();
     renderInventory();
-    alert(`Экипирован скин ${symbol}!`);
+    showAlert(`Успешно экипирован скин ${symbol}!`, "Инвентарь");
 }
 
 function renderPvPRequests() {
@@ -519,20 +567,25 @@ function renderPvPRequests() {
     });
 }
 
-function createPvPRequest() {
-    const inputBet = prompt("Введите вашу ставку (Крелики):", "50");
-    if (inputBet === null) return;
-    const bet = parseInt(inputBet);
+function openBetModal() {
+    document.getElementById('bet-modal').style.display = 'flex';
+}
+
+function confirmCreatePvPRequest() {
+    const betInput = document.getElementById('bet-input-field');
+    const bet = parseInt(betInput.value);
 
     if (isNaN(bet) || bet <= 0) {
-        alert("Введите корректную сумму!");
+        showAlert("Введите корректную сумму ставки!", "Ошибка");
         return;
     }
 
     if (user.balance < bet) {
-        alert("У вас недостаточно Креликов для такой ставки!");
+        showAlert("У вас недостаточно Креликов для такой ставки!", "Ошибка");
         return;
     }
+
+    closeModal('bet-modal');
 
     const requests = getPvPRequests();
     requests.push({
@@ -543,13 +596,13 @@ function createPvPRequest() {
 
     savePvPRequests(requests);
     addXP(200);
-    alert(`Заявка со ставкой ${bet} 🪙 создана! (+200 XP)`);
+    showAlert(`Заявка со ставкой ${bet} 🪙 создана! (+200 XP)`, "Успех");
     renderPvPRequests();
 }
 
 function acceptPvPRequest(reqId, bet) {
     if (user.balance < bet) {
-        alert("Недостаточно Креликов, чтобы принять эту дуэль!");
+        showAlert("Недостаточно Креликов, чтобы принять эту дуэль!", "Ошибка");
         return;
     }
 
@@ -568,7 +621,7 @@ let opponentSymbol = '';
 let botTimer = null;
 
 function selectDifficulty(diff) {
-    closeDiffModal();
+    closeModal('diff-modal');
     startWheelForGame();
 }
 
@@ -601,7 +654,7 @@ function startWheelForGame() {
         }
 
         setTimeout(() => {
-            document.getElementById('wheel-modal').style.display = 'none';
+            closeModal('wheel-modal');
             initBoard();
         }, 1800);
     }, 1500);
@@ -705,6 +758,6 @@ function quitGame() {
 }
 
 updateUI();
-            </script>
+                                                   </script>
 </body>
 </html>
