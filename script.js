@@ -34,6 +34,37 @@ document.addEventListener("DOMContentLoaded", () => {
             userData.name = tg.initDataUnsafe.user.first_name || "Игрок";
         }
     }
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            userData.name = tg.initDataUnsafe.user.first_name || "Игрок";
+        }
+    }
+
+    // --- СИНХРОНИЗАЦИЯ С СЕРВЕРОМ И Supabase ---
+    const RENDER_SERVER_URL = "https://tictactoe-bot-6wgq.onrender.com";
+
+    function saveToServer() {
+        if (!window.Telegram?.WebApp?.initDataUnsafe?.user?.id) return;
+        const userId = window.Telegram.WebApp.initDataUnsafe.user.id;
+
+        fetch(RENDER_SERVER_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                user_id: userId,
+                balance: userData.balance,
+                wins: userData.wins,
+                losses: userData.losses || 0,
+                draws: userData.draws || 0,
+                equipped_x: userData.equippedSkin.x,
+                equipped_o: userData.equippedSkin.o
+            })
+        }).catch(err => console.error("Ошибка сохранения на сервер:", err));
+    }
+
+    saveUserData = function() {
+        localStorage.setItem("tictactoe_user_data", JSON.stringify(userData));
+        saveToServer();
+    };
 
     // --- DOM ЭЛЕМЕНТЫ ---
     const topUsername = document.getElementById("top-username");
@@ -356,6 +387,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             
             updateUI();
+            saveUserData();
             if (resultModal) resultModal.style.display = "flex";
         }, 400);
     }
@@ -416,6 +448,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     userData.inventory.push(skin.id);
                     userData.equippedSkin = skin;
                     updateUI();
+                    saveUserData();
                 } else {
                     alert("Недостаточно монет!");
                 }
@@ -427,6 +460,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const skinId = e.target.getAttribute("data-id");
                 const skin = skinsCatalog.find(s => s.id === skinId);
                 userData.equippedSkin = skin;
+                saveUserData();
                 updateUI();
             });
         });
