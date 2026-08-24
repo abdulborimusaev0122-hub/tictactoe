@@ -16,7 +16,6 @@
             overflow: hidden;
         }
 
-        /* Верхняя шапка */
         .top-bar {
             display: flex;
             justify-content: space-between;
@@ -35,7 +34,6 @@
             font-size: 14px;
         }
 
-        /* Контейнер вкладок */
         .content {
             flex: 1;
             overflow-y: auto;
@@ -45,7 +43,6 @@
         .tab-page { display: none; }
         .tab-page.active { display: block; }
 
-        /* Элементы управления на Главной */
         .btn-main {
             width: 100%;
             padding: 14px;
@@ -61,12 +58,24 @@
         .section-title { font-size: 16px; font-weight: bold; margin: 16px 0 10px; color: #8e9499; }
         .card {
             background: var(--tg-theme-secondary-bg-color, #232e3c);
-            padding: 12px;
+            padding: 14px;
             border-radius: 12px;
             margin-bottom: 10px;
         }
 
-        /* Поле игры */
+        .sub-nav { display: flex; gap: 10px; margin-bottom: 15px; }
+        .sub-btn {
+            flex: 1;
+            padding: 8px;
+            background: #232e3c;
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .sub-btn.active { background: #2ea6ff; border-color: #2ea6ff; }
+
         .board {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -83,23 +92,23 @@
             justify-content: center;
             font-size: 36px;
             font-weight: bold;
+            user-select: none;
         }
 
-        /* Модальное окно выбора сложности */
         .modal {
             display: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.8);
             align-items: center;
             justify-content: center;
             z-index: 100;
         }
         .modal-content {
             background: var(--tg-theme-secondary-bg-color, #232e3c);
-            padding: 20px;
+            padding: 24px;
             border-radius: 16px;
-            width: 80%;
+            width: 85%;
             text-align: center;
         }
         .btn-diff {
@@ -113,7 +122,24 @@
             color: white;
         }
 
-        /* Профиль */
+        /* Анимация рулетки */
+        .wheel-box {
+            font-size: 64px;
+            margin: 20px 0;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .spinning {
+            animation: spin 0.15s infinite linear;
+        }
+        @keyframes spin {
+            0% { transform: scale(0.8) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(180deg); }
+            100% { transform: scale(0.8) rotate(360deg); }
+        }
+
         .progress-bar {
             background: rgba(255,255,255,0.1);
             height: 12px;
@@ -123,7 +149,6 @@
         }
         .progress-fill { background: #2ea6ff; height: 100%; width: 0%; transition: width 0.3s; }
 
-        /* Нижняя навигация */
         .navbar {
             position: fixed;
             bottom: 0; left: 0; right: 0;
@@ -150,13 +175,11 @@
 </head>
 <body>
 
-    <!-- Шапка с балансом -->
     <div class="top-bar">
         <div class="user-info" id="top-username">Игрок</div>
         <div class="currency">🪙 <span id="top-balance">100</span> Креликов</div>
     </div>
 
-    <!-- Контент вкладок -->
     <div class="content">
         
         <!-- 1. Главный экран -->
@@ -164,41 +187,58 @@
             <button class="btn-main" onclick="openDifficultyModal()">🤖 Играть с ИИ</button>
             
             <div id="game-area" style="display:none;">
+                <div style="text-align:center; margin-bottom:10px; font-size:14px; color:#8e9499;">
+                    Твой символ: <b id="player-symbol-display" style="color:#fff; font-size:18px;">-</b>
+                </div>
                 <div class="board" id="board"></div>
-                <div style="text-align:center; margin-top:10px;" id="game-status">Твой ход!</div>
-                <button class="btn-main" style="margin-top:10px; background:#e53935;" onclick="quitGame()">Сдаться / Выйти</button>
+                <div style="text-align:center; margin-top:10px; font-weight:bold; font-size:16px;" id="game-status">Ожидание...</div>
+                <button class="btn-main" style="margin-top:15px; background:#e53935;" onclick="quitGame()">Сдаться / Выйти</button>
             </div>
 
             <div id="pvp-section">
-                <div class="section-title">⚔️ Активные заявки</div>
-                <div class="card" id="requests-list">
-                    <i>Нет активных заявок онлайн</i>
+                <div class="section-title">⚔️ Активные заявки (Онлайн дуэли)</div>
+                <div id="requests-list">
+                    <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <b>@alex_pro</b> <small style="color:#8e9499;">(Ставка: 50 🪙)</small>
+                        </div>
+                        <button class="btn-main" style="width:auto; padding:6px 14px; margin:0;" onclick="startWheelForGame()">Принять</button>
+                    </div>
                 </div>
 
-                <div class="section-title">➕ Создать заявку на игру</div>
-                <button class="btn-main" style="background:#2b5278;" onclick="createPvPRequest()">Кинуть заявку в сеть</button>
+                <div class="section-title">➕ Создать заявку</div>
+                <button class="btn-main" style="background:#2b5278;" onclick="createPvPRequest()">Опубликовать заявку (+200 XP)</button>
             </div>
         </div>
 
-        <!-- 2. Магазин -->
+        <!-- 2. Магазин и Инвентарь -->
         <div id="tab-shop" class="tab-page">
-            <div class="section-title">🎨 Скины на Крестики и Нолики</div>
-            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-                <div>⚡ / 💀 "Огонь и Смерть"</div>
-                <button class="btn-main" style="width:auto; padding:8px 12px; margin:0;" onclick="buySkin('⚡', '💀', 200)">200 🪙</button>
+            <div class="sub-nav">
+                <button class="sub-btn active" id="btn-shop-market" onclick="switchShopSub('market')">🛒 Магазин</button>
+                <button class="sub-btn" id="btn-shop-inv" onclick="switchShopSub('inventory')">🎒 Инвентарь</button>
             </div>
-            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-                <div>🔥 / 👑 "Короли"</div>
-                <button class="btn-main" style="width:auto; padding:8px 12px; margin:0;" onclick="buySkin('🔥', '👑', 500)">500 🪙</button>
+
+            <div id="shop-market-view">
+                <div id="shop-items-list"></div>
+            </div>
+
+            <div id="shop-inv-view" style="display:none;">
+                <div class="section-title">Твои экипированные скины:</div>
+                <div class="card" style="text-align:center; font-size:18px;">
+                    Крестик: <b id="equipped-x-val">❌</b> | Нолик: <b id="equipped-o-val">⭕</b>
+                </div>
+                <div class="section-title">Ваша коллекция:</div>
+                <div id="inventory-items-list"></div>
             </div>
         </div>
 
         <!-- 3. Лидерборд -->
         <div id="tab-top" class="tab-page">
-            <div class="section-title">🏆 Топ игроков (Реальные игроки)</div>
+            <div class="section-title">🏆 Топ игроков по победам</div>
             <div id="leaderboard-list">
-                <div class="card">1. @alex_pro — 42 победы</div>
-                <div class="card">2. @player1337 — 38 побед</div>
+                <div class="card">1. 🥇 @alex_pro — 42 победы</div>
+                <div class="card">2. 🥈 @dark_lord — 31 победа</div>
+                <div class="card">3. 🥉 @player1337 — 19 побед</div>
             </div>
         </div>
 
@@ -211,8 +251,8 @@
                 <div style="font-size:12px; margin-top:5px; color:#8e9499;" id="prof-xp">0 / 100 XP</div>
             </div>
             <div class="card">
-                <div>💰 Креликов: <b id="prof-balance">100</b></div>
-                <div>🏆 Побед: <b id="prof-wins">0</b></div>
+                <div style="margin-bottom:6px;">💰 Баланс: <b id="prof-balance">100</b> Креликов</div>
+                <div>🏆 Всего побед: <b id="prof-wins">0</b></div>
             </div>
         </div>
 
@@ -222,10 +262,19 @@
     <div class="modal" id="diff-modal">
         <div class="modal-content">
             <h3>Выбери сложность ИИ</h3>
-            <button class="btn-diff" onclick="startGame('easy')">🟢 Легкий (+100 XP)</button>
-            <button class="btn-diff" onclick="startGame('medium')">🟡 Средний (+100 XP)</button>
-            <button class="btn-diff" onclick="startGame('hard')">🔴 Хард (+100 XP)</button>
+            <button class="btn-diff" onclick="selectDifficulty('easy')">🟢 Легкий (+100 XP)</button>
+            <button class="btn-diff" onclick="selectDifficulty('medium')">🟡 Средний (+100 XP)</button>
+            <button class="btn-diff" onclick="selectDifficulty('hard')">🔴 Хард (+100 XP)</button>
             <button class="btn-diff" style="background:#444;" onclick="closeDiffModal()">Отмена</button>
+        </div>
+    </div>
+
+    <!-- Модалка Рулетки (Жеребьёвки) -->
+    <div class="modal" id="wheel-modal">
+        <div class="modal-content">
+            <h3>🎲 Жеребьёвка ходов</h3>
+            <div class="wheel-box" id="wheel-icon">🎰</div>
+            <p id="wheel-status-text" style="font-weight:bold; color:#2ea6ff;">Определяем, кто ходит первым...</p>
         </div>
     </div>
 
@@ -241,15 +290,24 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Состояние пользователя
+        const ALL_SKINS = [
+            { id: 'classic', name: 'Классика', x: '❌', o: '⭕', price: 0 },
+            { id: 'fire_ice', name: 'Огонь и Лёд', x: '🔥', o: '❄️', price: 150 },
+            { id: 'swords', name: 'Дуэль клинков', x: '⚔️', o: '🛡️', price: 250 },
+            { id: 'space', name: 'Космос', x: '🚀', o: '🪐', price: 350 },
+            { id: 'kings', name: 'Королевский', x: '👑', o: '💎', price: 500 },
+            { id: 'skulls', name: 'Череп и Кости', x: '💀', o: '☠️', price: 750 }
+        ];
+
         let user = {
-            name: tg.initDataUnsafe?.user?.username || tg.initDataUnsafe?.user?.first_name || "Игрок",
+            name: tg.initDataUnsafe?.user?.username ? '@' + tg.initDataUnsafe.user.username : (tg.initDataUnsafe?.user?.first_name || "Игрок"),
             balance: 100,
             level: 1,
             xp: 0,
             wins: 0,
-            skinX: '❌',
-            skinO: '⭕'
+            equippedX: '❌',
+            equippedO: '⭕',
+            inventory: ['classic']
         };
 
         document.getElementById('top-username').innerText = user.name;
@@ -260,6 +318,21 @@
             document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
             document.getElementById('tab-' + tabId).classList.add('active');
             el.classList.add('active');
+        }
+
+        function switchShopSub(type) {
+            if (type === 'market') {
+                document.getElementById('shop-market-view').style.display = 'block';
+                document.getElementById('shop-inv-view').style.display = 'none';
+                document.getElementById('btn-shop-market').classList.add('active');
+                document.getElementById('btn-shop-inv').classList.remove('active');
+            } else {
+                document.getElementById('shop-market-view').style.display = 'none';
+                document.getElementById('shop-inv-view').style.display = 'block';
+                document.getElementById('btn-shop-inv').classList.add('active');
+                document.getElementById('btn-shop-market').classList.remove('active');
+                renderInventory();
+            }
         }
 
         function openDifficultyModal() { document.getElementById('diff-modal').style.display = 'flex'; }
@@ -281,19 +354,130 @@
             document.getElementById('prof-level').innerText = `Уровень: ${user.level} / 100`;
             document.getElementById('prof-xp').innerText = `${user.xp} / 100 XP`;
             document.getElementById('xp-fill').style.width = user.xp + '%';
+            document.getElementById('equipped-x-val').innerText = user.equippedX;
+            document.getElementById('equipped-o-val').innerText = user.equippedO;
+            renderShop();
         }
 
-        // Логика игры
+        function renderShop() {
+            const container = document.getElementById('shop-items-list');
+            container.innerHTML = '';
+            ALL_SKINS.forEach(skin => {
+                if (skin.price === 0) return;
+                const bought = user.inventory.includes(skin.id);
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.style = 'display:flex; justify-content:space-between; align-items:center;';
+                card.innerHTML = `
+                    <div><b>${skin.x} / ${skin.o}</b> "${skin.name}"</div>
+                    ${bought 
+                        ? `<span style="color:#2ea6ff; font-weight:bold;">Куплено</span>` 
+                        : `<button class="btn-main" style="width:auto; padding:8px 12px; margin:0;" onclick="buySkin('${skin.id}')">${skin.price} 🪙</button>`
+                    }
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderInventory() {
+            const container = document.getElementById('inventory-items-list');
+            container.innerHTML = '';
+            ALL_SKINS.forEach(skin => {
+                if (!user.inventory.includes(skin.id)) return;
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.style = 'display:flex; justify-content:space-between; align-items:center;';
+                card.innerHTML = `
+                    <div><b>${skin.x} / ${skin.o}</b> "${skin.name}"</div>
+                    <div>
+                        <button class="btn-main" style="width:auto; padding:6px 10px; margin:2px; font-size:12px; background:#2b5278;" onclick="equipSkin('${skin.x}', 'X')">Скин X</button>
+                        <button class="btn-main" style="width:auto; padding:6px 10px; margin:2px; font-size:12px; background:#2b5278;" onclick="equipSkin('${skin.o}', 'O')">Скин O</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function buySkin(skinId) {
+            const skin = ALL_SKINS.find(s => s.id === skinId);
+            if (user.balance >= skin.price) {
+                user.balance -= skin.price;
+                user.inventory.push(skin.id);
+                alert(`Вы успешно купили "${skin.name}"!`);
+                updateUI();
+            } else {
+                alert("Не хватает Креликов!");
+            }
+        }
+
+        function equipSkin(symbol, type) {
+            if (type === 'X') user.equippedX = symbol;
+            if (type === 'O') user.equippedO = symbol;
+            updateUI();
+            renderInventory();
+            alert(`Экипирован скин ${symbol}!`);
+        }
+
+        // Логика матча и жеребьёвки
         let boardState = ['', '', '', '', '', '', '', '', ''];
         let activeGame = false;
+        let isMyTurn = false;
+        let playerSymbol = '';   // Значок игрока (со скином)
+        let opponentSymbol = ''; // Значок соперника (стандарт)
+        let botTimer = null;
 
-        function startGame(diff) {
+        function selectDifficulty(diff) {
             closeDiffModal();
+            startWheelForGame();
+        }
+
+        function startWheelForGame() {
             document.getElementById('pvp-section').style.display = 'none';
             document.getElementById('game-area').style.display = 'block';
+            document.getElementById('wheel-modal').style.display = 'flex';
+            
+            const icon = document.getElementById('wheel-icon');
+            const statusText = document.getElementById('wheel-status-text');
+            icon.classList.add('spinning');
+            statusText.innerText = "Крутим колесо...";
+
+            setTimeout(() => {
+                icon.classList.remove('spinning');
+                const isPlayerX = Math.random() >= 0.5;
+
+                if (isPlayerX) {
+                    playerSymbol = user.equippedX;
+                    opponentSymbol = '⭕';
+                    isMyTurn = true;
+                    icon.innerText = playerSymbol;
+                    statusText.innerText = `Вам выпал Крестик (${playerSymbol})! Вы ходите первым!`;
+                } else {
+                    playerSymbol = user.equippedO;
+                    opponentSymbol = '❌';
+                    isMyTurn = false;
+                    icon.innerText = opponentSymbol;
+                    statusText.innerText = `Вам выпал Нолик (${playerSymbol})! Первым ходит соперник!`;
+                }
+
+                setTimeout(() => {
+                    document.getElementById('wheel-modal').style.display = 'none';
+                    initBoard();
+                }, 1800);
+            }, 1500);
+        }
+
+        function initBoard() {
             boardState = ['', '', '', '', '', '', '', '', ''];
             activeGame = true;
+            document.getElementById('player-symbol-display').innerText = playerSymbol;
             renderBoard();
+
+            if (isMyTurn) {
+                document.getElementById('game-status').innerText = "Твой ход!";
+            } else {
+                document.getElementById('game-status').innerText = "Соперник думает...";
+                botTimer = setTimeout(botMove, 1000);
+            }
         }
 
         function renderBoard() {
@@ -304,69 +488,4 @@
                 cell.classList.add('cell');
                 cell.innerText = val;
                 cell.onclick = () => makeMove(idx);
-                boardEl.appendChild(cell);
-            });
-        }
-
-        function makeMove(idx) {
-            if (boardState[idx] !== '' || !activeGame) return;
-            boardState[idx] = user.skinX;
-            renderBoard();
-            
-            if (checkWin(user.skinX)) {
-                endGame("🎉 Победа! +50 🪙 и +100 XP");
-                user.balance += 50;
-                user.wins += 1;
-                addXP(100);
-                return;
-            }
-            
-            setTimeout(botMove, 300);
-        }
-
-        function botMove() {
-            let empties = boardState.map((v, i) => v === '' ? i : null).filter(v => v !== null);
-            if (empties.length === 0 || !activeGame) return;
-            let move = empties[Math.floor(Math.random() * empties.length)];
-            boardState[move] = user.skinO;
-            renderBoard();
-            if (checkWin(user.skinO)) endGame("🤖 Бот победил!");
-        }
-
-        function checkWin(sym) {
-            const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-            return wins.some(c => c.every(i => boardState[i] === sym));
-        }
-
-        function endGame(msg) {
-            document.getElementById('game-status').innerText = msg;
-            activeGame = false;
-        }
-
-        function quitGame() {
-            document.getElementById('game-area').style.display = 'none';
-            document.getElementById('pvp-section').style.display = 'block';
-        }
-
-        function createPvPRequest() {
-            alert("Заявка создана! Ожидаем игроков онлайн...");
-            addXP(200); // +200 XP за PvP матчи
-        }
-
-        function buySkin(x, o, price) {
-            if (user.balance >= price) {
-                user.balance -= price;
-                user.skinX = x;
-                user.skinO = o;
-                alert("Скин успешно куплен и экипирован!");
-                updateUI();
-            } else {
-                alert("Не хватает Креликов!");
-            }
-        }
-
-        updateUI();
-    </script>
-</body>
-    </html>
-    
+               
