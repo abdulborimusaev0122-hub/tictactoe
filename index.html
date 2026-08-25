@@ -12,30 +12,41 @@
         <header>
             <span id="user-name" class="username">Игрок</span>
             <div class="balance-badge">
-                🪙 <span id="user-balance">100</span> Креликов
+                🪙 <span id="user-balance">200</span> Креликов
             </div>
         </header>
 
+        <!-- Главная -->
         <main id="tab-home" class="tab-content">
             <button id="btn-ai" class="btn btn-blue-bright">
                 🤖 Играть с ИИ
             </button>
 
             <div class="section-title">⚔️ Активные заявки (Онлайн дуэли)</div>
-            <div class="duel-card">
-                <div class="duel-info">
-                    <span class="opponent-name">@alex_pro</span>
-                    <span class="stake-info">(Ставка: 50 🪙)</span>
-                </div>
-                <button class="btn-accept">Принять</button>
+            <div id="lobbies-list" class="lobbies-container">
+                <div class="empty-state">Нет активных заявок</div>
             </div>
 
             <div class="section-title">➕ Создать заявку</div>
-            <button class="btn btn-blue-dark">
+            <button id="btn-open-create" class="btn btn-blue-dark">
                 Опубликовать заявку (+200 XP)
             </button>
         </main>
 
+        <!-- Модалка создания заявки -->
+        <div id="modal-create" class="modal hidden">
+            <div class="modal-content">
+                <h3>Создать дуэль</h3>
+                <label style="font-size:13px; color:#8a9ba8;">Укажи ставку (Крелики):</label>
+                <input type="number" id="input-stake" value="50" min="10" max="1000">
+                <div class="modal-actions">
+                    <button id="btn-confirm-create" class="btn btn-blue-bright">Опубликовать</button>
+                    <button id="btn-cancel-create" class="btn btn-blue-dark">Отмена</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Поле игры -->
         <section id="game-area" class="hidden">
             <div id="game-status" class="status-text">Ход: ❌</div>
             <div class="board" id="board">
@@ -52,24 +63,30 @@
             <button id="btn-quit" class="btn btn-blue-dark">Выйти в меню</button>
         </section>
 
+        <!-- Магазин -->
         <main id="tab-shop" class="tab-content hidden">
             <h2 class="page-title">Магазин скинов</h2>
             <div id="shop-list"></div>
         </main>
 
+        <!-- Лидерборд -->
         <main id="tab-leaderboard" class="tab-content hidden">
             <h2 class="page-title">Лидерборд</h2>
-            <p style="color: #8a9ba8; text-align: center;">Топ игроков обновляется...</p>
+            <div id="leaderboard-list">
+                <p style="color: #8a9ba8; text-align: center;">Загрузка списка игроков...</p>
+            </div>
         </main>
 
+        <!-- Профиль -->
         <main id="tab-profile" class="tab-content hidden">
             <h2 class="page-title">Профиль</h2>
             <div class="profile-card">
                 <p>Имя: <b id="prof-name">Игрок</b></p>
-                <p>Баланс: <b id="prof-balance">100</b> Креликов</p>
+                <p>Баланс: <b id="prof-balance">200</b> Креликов</p>
             </div>
         </main>
 
+        <!-- Навигация -->
         <nav class="bottom-nav">
             <button class="nav-btn active" data-tab="tab-home">
                 <span class="nav-icon">🏠</span>
