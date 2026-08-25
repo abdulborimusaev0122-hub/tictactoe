@@ -3,49 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tic-Tac-Toe Arcade</title>
+    <title>Tic-tac-toe</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
+    <div class="app-wrapper">
         <!-- Шапка -->
         <header>
-            <div class="user-info">
-                <span id="user-name">Игрок</span>
-            </div>
-            <div class="balance-box">
-                <span id="user-balance">0</span> 🪙
+            <span id="user-name" class="username">Игрок</span>
+            <div class="balance-badge">
+                🪙 <span id="user-balance">100</span> Креликов
             </div>
         </header>
 
-        <!-- Главное меню -->
-        <main id="main-menu">
-            <h1>Крестики-Нолики</h1>
-            <button id="btn-pvp" class="btn">Играть PvP</button>
-            <button id="btn-ai" class="btn">Играть с ИИ</button>
-            <button id="btn-shop" class="btn">Магазин скинов</button>
+        <!-- Главная страница -->
+        <main id="tab-home" class="tab-content">
+            <button id="btn-ai" class="btn btn-blue-bright">
+                🤖 Играть с ИИ
+            </button>
+
+            <div class="section-title">⚔️ Активные заявки (Онлайн дуэли)</div>
+            <div class="duel-card">
+                <div class="duel-info">
+                    <span class="opponent-name">@alex_pro</span>
+                    <span class="stake-info">(Ставка: 50 🪙)</span>
+                </div>
+                <button class="btn-accept">Принять</button>
+            </div>
+
+            <div class="section-title">➕ Создать заявку</div>
+            <button class="btn btn-blue-dark">
+                Опубликовать заявку (+200 XP)
+            </button>
         </main>
-
-        <!-- Выбор сложности ИИ -->
-        <section id="ai-section" class="hidden">
-            <h2>Выберите сложность</h2>
-            <button class="btn btn-diff" data-diff="easy">Легкий</button>
-            <button class="btn btn-diff" data-diff="medium">Средний</button>
-            <button class="btn btn-diff" data-diff="hard">Сложный</button>
-            <button class="btn-back btn">Назад</button>
-        </section>
-
-        <!-- Выбор PvP -->
-        <section id="pvp-section" class="hidden">
-            <h2>Режим PvP</h2>
-            <button id="btn-pvp-friend" class="btn">Играть с другом</button>
-            <button class="btn-back btn">Назад</button>
-        </section>
 
         <!-- Игровое поле -->
         <section id="game-area" class="hidden">
-            <div class="status" id="game-status">Ход: X</div>
+            <div id="game-status" class="status-text">Ход: ❌</div>
             <div class="board" id="board">
                 <div class="cell" data-index="0"></div>
                 <div class="cell" data-index="1"></div>
@@ -57,25 +52,49 @@
                 <div class="cell" data-index="7"></div>
                 <div class="cell" data-index="8"></div>
             </div>
-            <button id="btn-quit" class="btn">Выйти</button>
+            <button id="btn-quit" class="btn btn-blue-dark">Выйти в меню</button>
         </section>
 
         <!-- Магазин -->
-        <section id="shop-section" class="hidden">
-            <h2>Магазин скинов</h2>
+        <main id="tab-shop" class="tab-content hidden">
+            <h2 class="page-title">Магазин скинов</h2>
             <div id="shop-list"></div>
-            <button class="btn-back btn">Назад</button>
-        </section>
+        </main>
 
-        <!-- Модальное окно результата -->
-        <div id="result-modal" class="modal hidden">
-            <div class="modal-content">
-                <div id="res-icon">🏆</div>
-                <h2 id="res-title">Победа!</h2>
-                <p id="res-reward">+50 монет 🪙</p>
-                <button id="btn-home" class="btn">В меню</button>
+        <!-- Лидерборд -->
+        <main id="tab-leaderboard" class="tab-content hidden">
+            <h2 class="page-title">Лидерборд</h2>
+            <p style="color: #8a9ba8; text-align: center;">Топ игроков обновляется...</p>
+        </main>
+
+        <!-- Профиль -->
+        <main id="tab-profile" class="tab-content hidden">
+            <h2 class="page-title">Профиль</h2>
+            <div class="profile-card">
+                <p>Имя: <b id="prof-name">Игрок</b></p>
+                <p>Баланс: <b id="prof-balance">100</b> Креликов</p>
             </div>
-        </div>
+        </main>
+
+        <!-- Нижнее меню навигации -->
+        <nav class="bottom-nav">
+            <button class="nav-btn active" data-tab="tab-home">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">Главная</span>
+            </button>
+            <button class="nav-btn" data-tab="tab-shop">
+                <span class="nav-icon">🛒</span>
+                <span class="nav-label">Магазин</span>
+            </button>
+            <button class="nav-btn" data-tab="tab-leaderboard">
+                <span class="nav-icon">🏆</span>
+                <span class="nav-label">Лидерборд</span>
+            </button>
+            <button class="nav-btn" data-tab="tab-profile">
+                <span class="nav-icon">👤</span>
+                <span class="nav-label">Профиль</span>
+            </button>
+        </nav>
     </div>
 
     <script src="script.js"></script>
