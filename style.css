@@ -70,18 +70,38 @@ header {
     color: #9cb0c1;
 }
 
+.lobbies-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.empty-state {
+    color: #8a9ba8;
+    text-align: center;
+    padding: 15px;
+    background-color: #121d28;
+    border-radius: 12px;
+    font-size: 14px;
+}
+
 .duel-card {
     background-color: #121d28;
     border-radius: 12px;
-    padding: 14px;
+    padding: 12px 14px;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
+.duel-actions {
+    display: flex;
+    gap: 6px;
+}
+
 .opponent-name {
     font-weight: 700;
-    font-size: 16px;
+    font-size: 15px;
 }
 
 .stake-info {
@@ -94,10 +114,22 @@ header {
     background-color: #2a9df4;
     border: none;
     color: white;
-    padding: 8px 18px;
+    padding: 8px 14px;
     border-radius: 8px;
     font-weight: 700;
-    font-size: 14px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.btn-decline {
+    background-color: #e74c3c;
+    border: none;
+    color: white;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
 }
 
 .board {
@@ -115,6 +147,7 @@ header {
     justify-content: center;
     align-items: center;
     font-size: 38px;
+    cursor: pointer;
 }
 
 .status-text {
@@ -145,15 +178,52 @@ header {
     align-items: center;
 }
 
+/* Модалка */
+.modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    z-index: 100;
+}
+
+.modal-content {
+    background-color: #121d28;
+    padding: 20px;
+    border-radius: 14px;
+    width: 100%;
+    max-width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #214361;
+    background: #1b2735;
+    color: white;
+    font-size: 16px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
 .hidden {
     display: none !important;
 }
 
 .bottom-nav {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    bottom: 0; left: 0; right: 0;
     background-color: #121d28;
     display: flex;
     justify-content: space-around;
@@ -170,6 +240,7 @@ header {
     align-items: center;
     gap: 2px;
     font-size: 11px;
+    cursor: pointer;
 }
 
 .nav-btn.active {
