@@ -3,41 +3,18 @@ document.addEventListener("DOMContentLoaded", () => {
     if (tg) tg.expand();
 
     let userData = {
-        balance: 300,
+        id: tg?.initDataUnsafe?.user?.id || "guest",
+        name: tg?.initDataUnsafe?.user?.first_name || "Игрок",
+        balance: 200,
         wins: 0,
-        losses: 0,
-        draws: 0,
         inventory: ["default"],
         equippedSkin: { id: "default", x: "❌", o: "⭕" }
     };
 
-    if (tg?.initDataUnsafe?.user) {
-        userData.name = tg.initDataUnsafe.user.first_name || "Игрок";
-    }
-
     const RENDER_SERVER_URL = "https://tictactoe-bot-6wgq.onrender.com";
 
-    function saveToServer() {
-        if (!tg?.initDataUnsafe?.user?.id) return;
-        fetch(RENDER_SERVER_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                user_id: tg.initDataUnsafe.user.id,
-                balance: userData.balance,
-                wins: userData.wins,
-                losses: userData.losses || 0,
-                draws: userData.draws || 0,
-                equipped_x: userData.equippedSkin.x,
-                equipped_o: userData.equippedSkin.o
-            })
-        }).catch(err => console.error("Ошибка сохранения:", err));
-    }
-
-    function saveUserData() {
-        localStorage.setItem("tictactoe_user_data", JSON.stringify(userData));
-        saveToServer();
-    }
+    // Локальное хранение созданных заявок для теста
+    let localLobbies = [];
 
     const balanceEl = document.getElementById("user-balance");
     const nameEl = document.getElementById("user-name");
@@ -61,11 +38,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function updateUI() {
         if (balanceEl) balanceEl.textContent = userData.balance;
-        if (nameEl && userData.name) nameEl.textContent = userData.name;
-        if (profName && userData.name) profName.textContent = userData.name;
+        if (nameEl) nameEl.textContent = userData.name;
+        if (profName) profName.textContent = userData.name;
         if (profBalance) profBalance.textContent = userData.balance;
     }
 
+    // Вкладки
     const navButtons = document.querySelectorAll(".nav-btn");
     const tabContents = document.querySelectorAll(".tab-content");
 
@@ -81,9 +59,83 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById(targetTab)?.classList.remove("hidden");
 
             if (targetTab === "tab-shop") renderShop();
+            if (targetTab === "tab-home") renderLobbies();
         });
     });
 
+    // Отрисовка списка онлайн заявок
+    function renderLobbies() {
+        const listEl = document.getElementById("lobbies-list");
+        if (!listEl) return;
+        listEl.innerHTML = "";
+
+        if (localLobbies.length === 0) {
+            listEl.innerHTML = `<div class="empty-state">Нет активных заявок</div>`;
+            return;
+        }
+
+        localLobbies.forEach((lobby, index) => {
+            const card = document.createElement("div");
+            card.className = "duel-card";
+            card.innerHTML = `
+                <div class="duel-info">
+                    <span class="opponent-name">@${lobby.authorName}</span>
+                    <span class="stake-info">(Ставка: ${lobby.stake} 🪙)</span>
+                </div>
+                <div class="duel-actions">
+                    <button class="btn-accept" data-index="${index}">Принять</button>
+                    <button class="btn-decline" data-index="${index}">✕</button>
+                </div>
+            `;
+            listEl.appendChild(card);
+        });
+
+        document.querySelectorAll(".btn-accept").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const idx = e.target.getAttribute("data-index");
+                alert(`Вы приняли дуэль с @${localLobbies[idx].authorName}!`);
+                localLobbies.splice(idx, 1);
+                renderLobbies();
+            });
+        });
+
+        document.querySelectorAll(".btn-decline").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const idx = e.target.getAttribute("data-index");
+                localLobbies.splice(idx, 1);
+                renderLobbies();
+            });
+        });
+    }
+
+    // Создание заявки
+    const modalCreate = document.getElementById("modal-create");
+    document.getElementById("btn-open-create")?.addEventListener("click", () => {
+        modalCreate.classList.remove("hidden");
+    });
+
+    document.getElementById("btn-cancel-create")?.addEventListener("click", () => {
+        modalCreate.classList.add("hidden");
+    });
+
+    document.getElementById("btn-confirm-create")?.addEventListener("click", () => {
+        const stake = parseInt(document.getElementById("input-stake").value) || 50;
+        if (userData.balance < stake) {
+            alert("Недостаточно баланса для этой ставки!");
+            return;
+        }
+
+        localLobbies.push({
+            authorName: userData.name,
+            stake: stake
+        });
+
+        modalCreate.classList.add("hidden");
+        renderLobbies();
+        alert("Заявка успешно опубликована!");
+    });
+
+    // Магазин
     function renderShop() {
         const shopList = document.getElementById("shop-list");
         if (!shopList) return;
@@ -121,7 +173,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     userData.inventory.push(skin.id);
                     userData.equippedSkin = skin;
                     updateUI();
-                    saveUserData();
                     renderShop();
                 } else {
                     alert("Недостаточно монет!");
@@ -135,18 +186,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 const skin = skinsCatalog.find(s => s.id === skinId);
                 userData.equippedSkin = skin;
                 updateUI();
-                saveUserData();
                 renderShop();
             });
         });
     }
 
+    // Игра с ИИ
     document.getElementById("btn-ai")?.addEventListener("click", () => {
         tabContents.forEach(c => c.classList.add("hidden"));
         gameArea.classList.remove("hidden");
         
         gameState.board = ["", "", "", "", "", "", "", "", ""];
-        gameState.currentPlayer = "X";
         gameState.gameActive = true;
         renderBoard();
         if (gameStatus) gameStatus.textContent = `Ход: ${userData.equippedSkin.x}`;
@@ -178,7 +228,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 alert("Победа! +50 Креликов");
                 userData.balance += 50;
                 updateUI();
-                saveUserData();
                 gameState.gameActive = false;
                 return;
             }
@@ -210,5 +259,5 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     updateUI();
+    renderLobbies();
 });
-        
