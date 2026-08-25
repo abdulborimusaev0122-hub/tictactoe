@@ -51,7 +51,7 @@ header {
     border-radius: 12px;
     font-size: 16px;
     font-weight: 700;
-    color: #fff;
+    color: #ffffff !important;
     cursor: pointer;
 }
 
@@ -135,11 +135,20 @@ header {
     border-radius: 12px;
 }
 
+.shop-item {
+    background-color: #121d28;
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 .hidden {
     display: none !important;
 }
 
-/* Нижняя навигация */
 .bottom-nav {
     position: fixed;
     bottom: 0;
