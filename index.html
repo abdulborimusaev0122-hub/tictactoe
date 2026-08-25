@@ -2,151 +2,79 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Крестики-Нолики</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe Arcade</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-    <div class="app-container">
-        <!-- ВЕРХНЯЯ ПАНЕЛЬ -->
-        <header class="header">
+    <div class="container">
+        <!-- Шапка -->
+        <header>
             <div class="user-info">
-                <span id="top-username">Игрок</span>
+                <span id="user-name">Игрок</span>
             </div>
-            <div class="balance-container">
-                <span class="coin-icon">🪙</span>
-                <span id="top-balance">200</span>
+            <div class="balance-box">
+                <span id="user-balance">0</span> 🪙
             </div>
         </header>
 
-        <!-- ОСНОВНОЙ КОНТЕНТ -->
-        <main class="content">
-            <section id="tab-game" class="tab-page active">
-                <div id="pvp-section">
-                    <div class="card banner-card">
-                        <h2>Аркадная Дуэль</h2>
-                        <p>Играй с ботом или бросай вызов реальным игрокам!</p>
-                        <button id="btn-open-ai-setup" class="btn-primary">🎮 Играть с ИИ</button>
-                        <button id="btn-find-pvp" class="btn-primary" style="margin-top: 10px; background: #6c5ce7;">⚔️ Играть с Игроком</button>
-                    </div>
-
-                    <h3 style="margin: 15px 0 10px 0;">Игроки онлайн</h3>
-                    <div id="online-players-list"></div>
-                </div>
-
-                <!-- ЭКРАН ИГРЫ -->
-                <div id="game-area" style="display: none;">
-                    <div class="game-header">
-                        <button id="btn-quit" class="btn-secondary">⬅️ Назад</button>
-                        <h3 id="game-mode-title">Игра</h3>
-                        <div class="symbol-badge">Ваш знак: <span id="player-symbol-display">❌</span></div>
-                    </div>
-
-                    <div id="game-status" class="game-status">Ваш ход</div>
-
-                    <div class="board" id="board">
-                        <div class="cell" data-index="0"></div>
-                        <div class="cell" data-index="1"></div>
-                        <div class="cell" data-index="2"></div>
-                        <div class="cell" data-index="3"></div>
-                        <div class="cell" data-index="4"></div>
-                        <div class="cell" data-index="5"></div>
-                        <div class="cell" data-index="6"></div>
-                        <div class="cell" data-index="7"></div>
-                        <div class="cell" data-index="8"></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- МАГАЗИН -->
-            <section id="tab-shop" class="tab-page">
-                <h2>Магазин скинов</h2>
-                <p class="subtitle">Покупай уникальные наборы иконок!</p>
-                <div id="shop-list" class="shop-grid"></div>
-            </section>
-
-            <!-- ЛИДЕРБОРД -->
-            <section id="tab-leaderboard" class="tab-page">
-                <h2>Таблица лидеров</h2>
-                <p class="subtitle">Топ лучших игроков</p>
-                <div id="leaderboard-list"></div>
-            </section>
-
-            <!-- ПРОФИЛЬ -->
-            <section id="tab-profile" class="tab-page">
-                <div class="profile-card card">
-                    <div class="avatar-big">👤</div>
-                    <h2 id="prof-username">Игрок</h2>
-                    <div class="profile-stats">
-                        <div class="stat-box">
-                            <span>Баланс</span>
-                            <b>🪙 <span id="prof-balance">200</span></b>
-                        </div>
-                        <div class="stat-box">
-                            <span>Побед</span>
-                            <b>🏆 <span id="prof-wins">0</span></b>
-                        </div>
-                    </div>
-                    <div style="margin-top: 15px; text-align: left;">
-                        <small style="color: #aaa;">Текущий набор скина:</small>
-                        <div id="prof-skin" style="font-size: 20px; font-weight: bold; margin-top: 5px;">❌ / ⭕</div>
-                    </div>
-                </div>
-            </section>
+        <!-- Главное меню -->
+        <main id="main-menu">
+            <h1>Крестики-Нолики</h1>
+            <button id="btn-pvp" class="btn">Играть PvP</button>
+            <button id="btn-ai" class="btn">Играть с ИИ</button>
+            <button id="btn-shop" class="btn">Магазин скинов</button>
         </main>
 
-        <!-- НИЖНЯЯ ПАНЕЛЬ -->
-        <nav class="nav-bar">
-            <button class="nav-item active" data-tab="game">
-                <span class="nav-icon">⚔️</span>
-                <span>Игра</span>
-            </button>
-            <button class="nav-item" data-tab="shop">
-                <span class="nav-icon">🛍️</span>
-                <span>Магазин</span>
-            </button>
-            <button class="nav-item" data-tab="leaderboard">
-                <span class="nav-icon">🏆</span>
-                <span>Топ</span>
-            </button>
-            <button class="nav-item" data-tab="profile">
-                <span class="nav-icon">⚙️</span>
-                <span>Профиль</span>
-            </button>
-        </nav>
-    </div>
+        <!-- Выбор сложности ИИ -->
+        <section id="ai-section" class="hidden">
+            <h2>Выберите сложность</h2>
+            <button class="btn btn-diff" data-diff="easy">Легкий</button>
+            <button class="btn btn-diff" data-diff="medium">Средний</button>
+            <button class="btn btn-diff" data-diff="hard">Сложный</button>
+            <button class="btn-back btn">Назад</button>
+        </section>
 
-    <!-- МОДАЛЬНОЕ ОКНО: ВЫБОР СЛОЖНОСТИ -->
-    <div id="ai-setup-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-content">
-            <h3>Выбор сложности ИИ</h3>
-            <div class="difficulty-select">
-                <button id="diff-easy" class="btn-diff selected">Лёгкий</button>
-                <button id="diff-hard" class="btn-diff">Умный</button>
+        <!-- Выбор PvP -->
+        <section id="pvp-section" class="hidden">
+            <h2>Режим PvP</h2>
+            <button id="btn-pvp-friend" class="btn">Играть с другом</button>
+            <button class="btn-back btn">Назад</button>
+        </section>
+
+        <!-- Игровое поле -->
+        <section id="game-area" class="hidden">
+            <div class="status" id="game-status">Ход: X</div>
+            <div class="board" id="board">
+                <div class="cell" data-index="0"></div>
+                <div class="cell" data-index="1"></div>
+                <div class="cell" data-index="2"></div>
+                <div class="cell" data-index="3"></div>
+                <div class="cell" data-index="4"></div>
+                <div class="cell" data-index="5"></div>
+                <div class="cell" data-index="6"></div>
+                <div class="cell" data-index="7"></div>
+                <div class="cell" data-index="8"></div>
             </div>
-            <button id="btn-start-ai-coin" class="btn-primary" style="margin-top: 15px;">Начать матч</button>
-            <button id="btn-close-setup" class="btn-secondary" style="margin-top: 10px; width: 100%;">Отмена</button>
-        </div>
-    </div>
+            <button id="btn-quit" class="btn">Выйти</button>
+        </section>
 
-    <!-- МОДАЛЬНОЕ ОКНО: ЖРЕБИЙ -->
-    <div id="coin-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-content text-center">
-            <h3>ЖРЕБИЙ</h3>
-            <div id="coin-result-text" style="font-size: 18px; margin: 20px 0;">🪙 Подбрасываем монетку...</div>
-            <button id="btn-go-game" class="btn-primary" style="display: none;">В бой!</button>
-        </div>
-    </div>
+        <!-- Магазин -->
+        <section id="shop-section" class="hidden">
+            <h2>Магазин скинов</h2>
+            <div id="shop-list"></div>
+            <button class="btn-back btn">Назад</button>
+        </section>
 
-    <!-- МОДАЛЬНОЕ ОКНО: РЕЗУЛЬТАТ МАТЧА С ИКОНКОЙ И КНОПКОЙ ДОМОЙ -->
-    <div id="result-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-content text-center">
-            <div id="res-icon" style="font-size: 60px; margin-bottom: 10px;">🏆</div>
-            <h2 id="res-title" style="margin-bottom: 10px;">Победа!</h2>
-            <p id="res-reward" style="font-size: 18px; color: #ffeaa7; margin-bottom: 20px;">+50 монет 🪙</p>
-            <button id="btn-home" class="btn-primary">🏠 Домой</button>
+        <!-- Модальное окно результата -->
+        <div id="result-modal" class="modal hidden">
+            <div class="modal-content">
+                <div id="res-icon">🏆</div>
+                <h2 id="res-title">Победа!</h2>
+                <p id="res-reward">+50 монет 🪙</p>
+                <button id="btn-home" class="btn">В меню</button>
+            </div>
         </div>
     </div>
 
