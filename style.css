@@ -2,94 +2,171 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 body {
-    background-color: #1a1a2e;
-    color: #fff;
+    background-color: #1b2735;
+    color: #ffffff;
     display: flex;
     justify-content: center;
-    align-items: center;
     min-height: 100vh;
 }
 
-.container {
+.app-wrapper {
     width: 100%;
-    max-width: 360px;
-    padding: 15px;
-    text-align: center;
+    max-width: 420px;
+    padding: 16px;
+    padding-bottom: 80px;
+    display: flex;
+    flex-direction: column;
 }
 
 header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
-    background: #16213e;
-    padding: 10px 15px;
-    border-radius: 10px;
+    margin-bottom: 20px;
 }
 
-.balance-box {
+.username {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.balance-badge {
+    background-color: #0d2847;
+    color: #38ef7d;
+    border: 1px solid #1a426e;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+}
+
+.btn-blue-bright {
+    background-color: #2a9df4;
+}
+
+.btn-blue-dark {
+    background-color: #214361;
+}
+
+.section-title {
+    margin: 22px 0 10px 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #9cb0c1;
+}
+
+.duel-card {
+    background-color: #121d28;
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.opponent-name {
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.stake-info {
+    color: #8a9ba8;
+    font-size: 13px;
+    margin-left: 4px;
+}
+
+.btn-accept {
+    background-color: #2a9df4;
+    border: none;
+    color: white;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.cell {
+    aspect-ratio: 1;
+    background-color: #121d28;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 38px;
+}
+
+.status-text {
+    text-align: center;
+    font-size: 18px;
     font-weight: bold;
-    color: #f1c40f;
+    margin-bottom: 10px;
+}
+
+.page-title {
+    font-size: 20px;
+    margin-bottom: 15px;
+}
+
+.profile-card {
+    background-color: #121d28;
+    padding: 15px;
+    border-radius: 12px;
 }
 
 .hidden {
     display: none !important;
 }
 
-.btn {
-    width: 100%;
-    padding: 12px;
-    margin: 8px 0;
-    border: none;
-    border-radius: 8px;
-    background-color: #0f3460;
-    color: white;
-    font-size: 16px;
-    font-weight: bold;
-}
-
-.board {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    margin: 15px 0;
-}
-
-.cell {
-    aspect-ratio: 1;
-    background-color: #16213e;
-    border-radius: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 36px;
-}
-
-.shop-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #16213e;
-    padding: 10px;
-    margin-bottom: 8px;
-    border-radius: 8px;
-}
-
-.modal {
+/* Нижняя навигация */
+.bottom-nav {
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.8);
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #121d28;
     display: flex;
-    justify-content: center;
-    align-items: center;
+    justify-content: space-around;
+    padding: 8px 0;
+    border-top: 1px solid #1c2b3c;
 }
 
-.modal-content {
-    background: #16213e;
-    padding: 25px;
-    border-radius: 15px;
+.nav-btn {
+    background: none;
+    border: none;
+    color: #64788a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-size: 11px;
+}
+
+.nav-btn.active {
+    color: #2a9df4;
+}
+
+.nav-icon {
+    font-size: 18px;
 }
