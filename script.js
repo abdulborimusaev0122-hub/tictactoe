@@ -2,55 +2,48 @@ document.addEventListener("DOMContentLoaded", () => {
     const tg = window.Telegram?.WebApp;
     if (tg) tg.expand();
 
-    let userData = {
-        id: tg?.initDataUnsafe?.user?.id || "guest",
+    // Загрузка сохранённых данных из localStorage
+    const savedData = localStorage.getItem("tictactoe_user_data");
+    
+    let userData = savedData ? JSON.parse(savedData) : {
+        id: tg?.initDataUnsafe?.user?.id || "guest_" + Math.floor(Math.random() * 1000),
         name: tg?.initDataUnsafe?.user?.first_name || "Игрок",
         balance: 200,
         xp: 0,
         level: 1,
         wins: 0,
         inventory: ["default"],
-        equippedSkin: { id: "default", name: "Классический", x: "❌", o: "⭕" }
+        equippedSkin: { id: "default", name: "Классика", x: "❌", o: "⭕" }
     };
+
+    function saveData() {
+        localStorage.setItem("tictactoe_user_data", JSON.stringify(userData));
+    }
 
     let selectedDifficulty = "easy";
     let selectedPlayerForChallenge = null;
 
-    let allOnlinePlayers = [
-        { id: 101, name: "Алексей ⚡" },
-        { id: 102, name: "Тимур 🔥" },
-        { id: 103, name: "София 💎" },
-        { id: 104, name: "Даниил 🚀" }
-    ];
-
+    // Демо-игроки удалены. Здесь будет список реальных игроков с сервера.
+    let allOnlinePlayers = [];
     let localLobbies = [];
 
-    // Каталог скинов (цены постепенно растут)
-// Расширенный каталог скинов
-const skinsCatalog = [
-    // --- Обычные скины ---
-    { id: "default", name: "Классика", x: "❌", o: "⭕", price: 0 },
-    { id: "fire_ice", name: "Огонь и Лёд", x: "🔥", o: "❄️", price: 100 },
-    { id: "star_moon", name: "Космос", x: "⭐", o: "🌙", price: 200 },
-    
-    // --- Редкие скины ---
-    { id: "fruit", name: "Фруктовый Микс", x: "🍎", o: "🍌", price: 350 },
-    { id: "animal", name: "Джунгли", x: "🦁", o: "🐯", price: 500 },
-    { id: "ninja", name: "Ниндзя", x: "⚔️", o: "🛡️", price: 650 },
-    { id: "magic", name: "Магия", x: "🪄", o: "🔮", price: 800 },
-
-    // --- Эпические скины ---
-    { id: "royal", name: "Королевский", x: "👑", o: "💎", price: 1000 },
-    { id: "toxic", name: "Заражение", x: "☣️", o: "💀", price: 1250 },
-    { id: "cyber", name: "Киберпанк", x: "⚡", o: "🤖", price: 1500 },
-    { id: "space", name: "Пришельцы", x: "🛸", o: "👾", price: 1800 },
-
-    // --- Легендарные скины ---
-    { id: "dragon", name: "Драконы", x: "🐉", o: "🐲", price: 2200 },
-    { id: "ghost", name: "Мистика", x: "👻", o: "🎃", price: 2700 },
-    { id: "neon", name: "Неоновый Взрыв", x: "🌀", o: "💥", price: 3500 },
-    { id: "godly", name: "Божественный", x: "🔱", o: "☀️", price: 5000 }
-];
+    const skinsCatalog = [
+        { id: "default", name: "Классика", x: "❌", o: "⭕", price: 0 },
+        { id: "fire_ice", name: "Огонь и Лёд", x: "🔥", o: "❄️", price: 100 },
+        { id: "star_moon", name: "Космос", x: "⭐", o: "🌙", price: 200 },
+        { id: "fruit", name: "Фруктовый Микс", x: "🍎", o: "🍌", price: 350 },
+        { id: "animal", name: "Джунгли", x: "🦁", o: "🐯", price: 500 },
+        { id: "ninja", name: "Ниндзя", x: "⚔️", o: "🛡️", price: 650 },
+        { id: "magic", name: "Магия", x: "🪄", o: "🔮", price: 800 },
+        { id: "royal", name: "Королевский", x: "👑", o: "💎", price: 1000 },
+        { id: "toxic", name: "Заражение", x: "☣️", o: "💀", price: 1250 },
+        { id: "cyber", name: "Киберпанк", x: "⚡", o: "🤖", price: 1500 },
+        { id: "space", name: "Пришельцы", x: "🛸", o: "👾", price: 1800 },
+        { id: "dragon", name: "Драконы", x: "🐉", o: "🐲", price: 2200 },
+        { id: "ghost", name: "Мистика", x: "👻", o: "🎃", price: 2700 },
+        { id: "neon", name: "Неоновый Взрыв", x: "🌀", o: "💥", price: 3500 },
+        { id: "godly", name: "Божественный", x: "🔱", o: "☀️", price: 5000 }
+    ];
 
     let gameState = {
         board: ["", "", "", "", "", "", "", "", ""],
@@ -62,7 +55,6 @@ const skinsCatalog = [
     };
 
     function updateUI() {
-        // Теги и титулы в зависимости от уровня
         let tag = "Новичок";
         if (userData.level >= 3) tag = "Любитель";
         if (userData.level >= 5) tag = "Мастер ⚡";
@@ -74,7 +66,6 @@ const skinsCatalog = [
         document.getElementById("user-balance").textContent = userData.balance;
         document.getElementById("user-name").textContent = userData.name;
 
-        // Профиль
         document.getElementById("prof-name").textContent = userData.name;
         document.getElementById("prof-balance").textContent = userData.balance;
         document.getElementById("prof-wins").textContent = userData.wins;
@@ -83,6 +74,8 @@ const skinsCatalog = [
         document.getElementById("prof-tag").textContent = tag;
         document.getElementById("prof-xp-text").textContent = `${userData.xp} / ${neededXp} XP`;
         document.getElementById("prof-xp-bar").style.width = `${xpPercent}%`;
+
+        saveData();
     }
 
     // Навигация
@@ -110,7 +103,7 @@ const skinsCatalog = [
         });
     });
 
-    // Поиск игроков
+    // Отрисовка списка онлайн игроков
     document.getElementById("btn-refresh-online")?.addEventListener("click", () => renderOnlinePlayers());
     document.getElementById("input-search-player")?.addEventListener("input", (e) => {
         renderOnlinePlayers(e.target.value.toLowerCase());
@@ -124,7 +117,7 @@ const skinsCatalog = [
         const filtered = allOnlinePlayers.filter(p => p.name.toLowerCase().includes(query));
 
         if (filtered.length === 0) {
-            listEl.innerHTML = `<div class="empty-state">Игроки не найдены</div>`;
+            listEl.innerHTML = `<div class="empty-state">Нет игроков в сети. Для игры с друзьями нужен сервер.</div>`;
             return;
         }
 
@@ -214,7 +207,7 @@ const skinsCatalog = [
         startWheelSpin(true);
     });
 
-    // Анимация Колеса (Жеребьёвка ❌ или ⭕)
+    // Анимация Колеса
     function startWheelSpin(isAi) {
         tabContents.forEach(c => c.classList.add("hidden"));
         const wheelArea = document.getElementById("wheel-area");
@@ -291,12 +284,10 @@ const skinsCatalog = [
             renderBoard();
 
             if (checkWin(gameState.currentPlayer)) {
-                // Выигрыш: добавляем опыт и монеты
                 userData.balance += 50;
                 userData.wins += 1;
                 userData.xp += 40;
 
-                // Проверка повышения уровня
                 const neededXp = userData.level * 100;
                 if (userData.xp >= neededXp) {
                     userData.xp -= neededXp;
@@ -453,4 +444,4 @@ const skinsCatalog = [
     renderOnlinePlayers();
     renderLobbies();
 });
-            
+                                                 
