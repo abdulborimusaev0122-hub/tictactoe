@@ -288,25 +288,23 @@ document.addEventListener("DOMContentLoaded", () => {
             renderBoard();
 
             if (checkWin(gameState.currentPlayer)) {
-                userData.balance += 50;
-                userData.wins += 1;
-                userData.xp += 40;
+            userData.balance += 50;
+            userData.wins += 1;
+            userData.xp += 70; // Стало +70 XP
 
-                const neededXp = userData.level * 100;
-                if (userData.xp >= neededXp) {
-                    userData.xp -= neededXp;
-                    userData.level += 1;
-                }
-
-                updateUI();
-                showGameOver(true, "Вы выиграли! +50 🪙 и +40 XP");
-                return;
+            checkLevelUp(); // Используем функцию проверки уровня
+            updateUI();
+            showGameOver(true, "Вы выиграли! +50 🪙 и +70 XP");
+            return;
             }
 
             if (!gameState.board.includes("")) {
-                showGameOver(false, "Ничья!");
-                return;
-            }
+            userData.xp += 20; // +20 XP за ничью
+            checkLevelUp();
+            updateUI();
+            showGameOver(false, "Ничья! +20 XP");
+            return;
+}
 
             gameState.currentPlayer = gameState.currentPlayer === "X" ? "O" : "X";
             updateGameStatus();
@@ -329,14 +327,21 @@ document.addEventListener("DOMContentLoaded", () => {
         renderBoard();
 
         if (checkWin(gameState.aiSymbol)) {
-            showGameOver(false, "ИИ победил!");
-            return;
-        }
+    userData.xp = Math.max(0, userData.xp - 10); // Отнимаем 10 XP
+    updateUI();
+    showGameOver(false, "ИИ победил! -10 XP");
+    return;
+}
+
 
         if (!gameState.board.includes("")) {
-            showGameOver(false, "Ничья!");
-            return;
-        }
+    userData.xp += 20; // +20 XP за ничью
+    checkLevelUp();
+    updateUI();
+    showGameOver(false, "Ничья! +20 XP");
+    return;
+}
+
 
         gameState.currentPlayer = gameState.playerSymbol;
         updateGameStatus();
