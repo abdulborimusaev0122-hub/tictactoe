@@ -6,21 +6,29 @@ document.addEventListener("DOMContentLoaded", () => {
         id: tg?.initDataUnsafe?.user?.id || "guest",
         name: tg?.initDataUnsafe?.user?.first_name || "Игрок",
         balance: 200,
-        wins: 0,
         inventory: ["default"],
         equippedSkin: { id: "default", x: "❌", o: "⭕" }
     };
 
-    const RENDER_SERVER_URL = "https://tictactoe-bot-6wgq.onrender.com";
+    let selectedDifficulty = "easy"; // 'easy' или 'hard'
+    let selectedPlayerForChallenge = null;
 
-    // Локальное хранение созданных заявок для теста
+    // Онлайн игроки (демо-список)
+    let onlinePlayers = [
+        { id: 101, name: "Алексей ⚡" },
+        { id: 102, name: "Тимур 🔥" },
+        { id: 103, name: "София 💎" }
+    ];
+
     let localLobbies = [];
 
     const balanceEl = document.getElementById("user-balance");
     const nameEl = document.getElementById("user-name");
     const profName = document.getElementById("prof-name");
     const profBalance = document.getElementById("prof-balance");
+
     const gameArea = document.getElementById("game-area");
+    const wheelArea = document.getElementById("wheel-area");
     const gameStatus = document.getElementById("game-status");
     const cells = document.querySelectorAll(".cell");
 
@@ -33,7 +41,10 @@ document.addEventListener("DOMContentLoaded", () => {
     let gameState = {
         board: ["", "", "", "", "", "", "", "", ""],
         currentPlayer: "X",
-        gameActive: false
+        playerSymbol: "X",
+        aiSymbol: "O",
+        gameActive: false,
+        isAiGame: true
     };
 
     function updateUI() {
@@ -43,27 +54,77 @@ document.addEventListener("DOMContentLoaded", () => {
         if (profBalance) profBalance.textContent = userData.balance;
     }
 
-    // Вкладки
+    // Переключение вкладок
     const navButtons = document.querySelectorAll(".nav-btn");
     const tabContents = document.querySelectorAll(".tab-content");
 
     navButtons.forEach(btn => {
         btn.addEventListener("click", () => {
             const targetTab = btn.getAttribute("data-tab");
-            
             navButtons.forEach(b => b.classList.remove("active"));
             tabContents.forEach(c => c.classList.add("hidden"));
+            
             gameArea.classList.add("hidden");
+            wheelArea.classList.add("hidden");
 
             btn.classList.add("active");
             document.getElementById(targetTab)?.classList.remove("hidden");
 
             if (targetTab === "tab-shop") renderShop();
-            if (targetTab === "tab-home") renderLobbies();
+            if (targetTab === "tab-home") {
+                renderOnlinePlayers();
+                renderLobbies();
+            }
         });
     });
 
-    // Отрисовка списка онлайн заявок
+    // Рендер онлайн-игроков
+    function renderOnlinePlayers() {
+        const listEl = document.getElementById("online-players-list");
+        if (!listEl) return;
+        listEl.innerHTML = "";
+
+        if (onlinePlayers.length === 0) {
+            listEl.innerHTML = `<div class="empty-state">Нет игроков онлайн</div>`;
+            return;
+        }
+
+        onlinePlayers.forEach(player => {
+            const card = document.createElement("div");
+            card.className = "player-online-card";
+            card.innerHTML = `
+                <span class="opponent-name">${player.name}</span>
+                <span style="color:#38ef7d; font-size:12px;">Онлайн 🟢</span>
+            `;
+            card.addEventListener("click", () => openPlayerInfo(player));
+            listEl.appendChild(card);
+        });
+    }
+
+    function openPlayerInfo(player) {
+        selectedPlayerForChallenge = player;
+        document.getElementById("info-player-name").textContent = player.name;
+        document.getElementById("modal-player-info").classList.remove("hidden");
+    }
+
+    document.getElementById("btn-close-player-info")?.addEventListener("click", () => {
+        document.getElementById("modal-player-info").classList.add("hidden");
+    });
+
+    document.getElementById("btn-send-challenge")?.addEventListener("click", () => {
+        if (!selectedPlayerForChallenge) return;
+        
+        localLobbies.push({
+            authorName: selectedPlayerForChallenge.name,
+            stake: 50
+        });
+
+        document.getElementById("modal-player-info").classList.add("hidden");
+        renderLobbies();
+        alert(`Заявка отправлена игроку ${selectedPlayerForChallenge.name}!`);
+    });
+
+    // Рендер входящих заявок
     function renderLobbies() {
         const listEl = document.getElementById("lobbies-list");
         if (!listEl) return;
@@ -79,8 +140,8 @@ document.addEventListener("DOMContentLoaded", () => {
             card.className = "duel-card";
             card.innerHTML = `
                 <div class="duel-info">
-                    <span class="opponent-name">@${lobby.authorName}</span>
-                    <span class="stake-info">(Ставка: ${lobby.stake} 🪙)</span>
+                    <span class="opponent-name">${lobby.authorName}</span>
+                    <span class="stake-info">(Дуэль)</span>
                 </div>
                 <div class="duel-actions">
                     <button class="btn-accept" data-index="${index}">Принять</button>
@@ -93,9 +154,9 @@ document.addEventListener("DOMContentLoaded", () => {
         document.querySelectorAll(".btn-accept").forEach(btn => {
             btn.addEventListener("click", (e) => {
                 const idx = e.target.getAttribute("data-index");
-                alert(`Вы приняли дуэль с @${localLobbies[idx].authorName}!`);
                 localLobbies.splice(idx, 1);
                 renderLobbies();
+                startWheelSpin(false); // Запуск колеса для игры с дуэлянтом
             });
         });
 
@@ -108,31 +169,214 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Создание заявки
-    const modalCreate = document.getElementById("modal-create");
-    document.getElementById("btn-open-create")?.addEventListener("click", () => {
-        modalCreate.classList.remove("hidden");
+    // Выбор сложности ИИ
+    const modalAi = document.getElementById("modal-ai");
+    document.getElementById("btn-open-ai-modal")?.addEventListener("click", () => {
+        modalAi.classList.remove("hidden");
     });
 
-    document.getElementById("btn-cancel-create")?.addEventListener("click", () => {
-        modalCreate.classList.add("hidden");
+    document.getElementById("btn-cancel-ai")?.addEventListener("click", () => {
+        modalAi.classList.add("hidden");
     });
 
-    document.getElementById("btn-confirm-create")?.addEventListener("click", () => {
-        const stake = parseInt(document.getElementById("input-stake").value) || 50;
-        if (userData.balance < stake) {
-            alert("Недостаточно баланса для этой ставки!");
+    document.getElementById("btn-ai-easy")?.addEventListener("click", () => {
+        selectedDifficulty = "easy";
+        modalAi.classList.add("hidden");
+        startWheelSpin(true);
+    });
+
+    document.getElementById("btn-ai-hard")?.addEventListener("click", () => {
+        selectedDifficulty = "hard";
+        modalAi.classList.add("hidden");
+        startWheelSpin(true);
+    });
+
+    // Колесо Жеребьёвки
+    function startWheelSpin(isAi) {
+        tabContents.forEach(c => c.classList.add("hidden"));
+        wheelArea.classList.remove("hidden");
+
+        const wheel = document.getElementById("wheel");
+        const resultEl = document.getElementById("wheel-result");
+        resultEl.textContent = "Крутим колесо...";
+
+        // Случайный выбор первого хода (X или O)
+        const isXFirst = Math.random() < 0.5;
+        const extraTurns = 5 + Math.floor(Math.random() * 3); 
+        const baseDegree = isXFirst ? 90 : 270;
+        const totalDegree = extraTurns * 360 + baseDegree;
+
+        wheel.style.transform = `rotate(${totalDegree}deg)`;
+
+        setTimeout(() => {
+            const firstSymbol = isXFirst ? "X" : "O";
+            const skinSymbol = firstSymbol === "X" ? userData.equippedSkin.x : userData.equippedSkin.o;
+            
+            resultEl.textContent = `Первым ходит: ${skinSymbol}!`;
+
+            setTimeout(() => {
+                wheelArea.classList.add("hidden");
+                initGame(isAi, firstSymbol);
+            }, 1200);
+        }, 3000);
+    }
+
+    // Инициализация игры
+    function initGame(isAi, firstSymbol) {
+        gameArea.classList.remove("hidden");
+        gameState.board = ["", "", "", "", "", "", "", "", ""];
+        gameState.gameActive = true;
+        gameState.isAiGame = isAi;
+        gameState.currentPlayer = firstSymbol;
+
+        renderBoard();
+        updateGameStatus();
+
+        if (isAi && gameState.currentPlayer === "O") {
+            setTimeout(makeAiMove, 500);
+        }
+    }
+
+    function updateGameStatus() {
+        const curIcon = gameState.currentPlayer === "X" ? userData.equippedSkin.x : userData.equippedSkin.o;
+        if (gameStatus) gameStatus.textContent = `Ход: ${curIcon}`;
+    }
+
+    function renderBoard() {
+        cells.forEach((cell, idx) => {
+            const val = gameState.board[idx];
+            if (val === "X") cell.textContent = userData.equippedSkin.x;
+            else if (val === "O") cell.textContent = userData.equippedSkin.o;
+            else cell.textContent = "";
+        });
+    }
+
+    // Ходы игроков
+    cells.forEach(cell => {
+        cell.addEventListener("click", (e) => {
+            const idx = e.target.getAttribute("data-index");
+            if (!gameState.gameActive || gameState.board[idx] !== "") return;
+
+            gameState.board[idx] = gameState.currentPlayer;
+            renderBoard();
+
+            if (checkWin(gameState.currentPlayer)) {
+                showGameOver(true, `Вы выиграли! +50 Креликов`);
+                userData.balance += 50;
+                updateUI();
+                return;
+            }
+
+            if (!gameState.board.includes("")) {
+                showGameOver(false, "Ничья!");
+                return;
+            }
+
+            // Переход хода
+            gameState.currentPlayer = gameState.currentPlayer === "X" ? "O" : "X";
+            updateGameStatus();
+
+            if (gameState.isAiGame && gameState.currentPlayer === "O") {
+                setTimeout(makeAiMove, 400);
+            }
+        });
+    });
+
+    // Логика ИИ (Легкая / Сложная)
+    function makeAiMove() {
+        if (!gameState.gameActive) return;
+
+        let empty = gameState.board.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+        if (empty.length === 0) return;
+
+        let move;
+        if (selectedDifficulty === "easy") {
+            move = empty[Math.floor(Math.random() * empty.length)];
+        } else {
+            // Сложный ИИ (Minimax / Блокировка победы)
+            move = getBestMove();
+        }
+
+        gameState.board[move] = "O";
+        renderBoard();
+
+        if (checkWin("O")) {
+            showGameOver(false, "ИИ одержал победу!");
             return;
         }
 
-        localLobbies.push({
-            authorName: userData.name,
-            stake: stake
-        });
+        if (!gameState.board.includes("")) {
+            showGameOver(false, "Ничья!");
+            return;
+        }
 
-        modalCreate.classList.add("hidden");
+        gameState.currentPlayer = "X";
+        updateGameStatus();
+    }
+
+    function getBestMove() {
+        // Умная блокировка/победа
+        const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+        
+        // 1. Попробовать выиграть
+        for (let p of wins) {
+            let [a, b, c] = p;
+            if (gameState.board[a] === "O" && gameState.board[b] === "O" && gameState.board[c] === "") return c;
+            if (gameState.board[a] === "O" && gameState.board[c] === "O" && gameState.board[b] === "") return b;
+            if (gameState.board[b] === "O" && gameState.board[c] === "O" && gameState.board[a] === "") return a;
+        }
+
+        // 2. Заблокировать игрока
+        for (let p of wins) {
+            let [a, b, c] = p;
+            if (gameState.board[a] === "X" && gameState.board[b] === "X" && gameState.board[c] === "") return c;
+            if (gameState.board[a] === "X" && gameState.board[c] === "X" && gameState.board[b] === "") return b;
+            if (gameState.board[b] === "X" && gameState.board[c] === "X" && gameState.board[a] === "") return a;
+        }
+
+        // 3. Занять центр или случайное
+        if (gameState.board[4] === "") return 4;
+        let empty = gameState.board.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+        return empty[Math.floor(Math.random() * empty.length)];
+    }
+
+    function checkWin(symbol) {
+        const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+        return wins.some(p => p.every(i => gameState.board[i] === symbol));
+    }
+
+    // Экран конца игры
+    function showGameOver(isWin, desc) {
+        gameState.gameActive = false;
+        const modal = document.getElementById("modal-game-over");
+        const title = document.getElementById("game-over-title");
+        const icon = document.getElementById("game-over-icon");
+        const descEl = document.getElementById("game-over-desc");
+
+        if (isWin) {
+            title.textContent = "ПОБЕДА!";
+            icon.textContent = "🎉";
+        } else {
+            title.textContent = "ИГРА ОКОНЧЕНА";
+            icon.textContent = "⚔️";
+        }
+
+        descEl.textContent = desc;
+        modal.classList.remove("hidden");
+    }
+
+    // Кнопка "Вернуться домой"
+    document.getElementById("btn-go-home")?.addEventListener("click", () => {
+        document.getElementById("modal-game-over").classList.add("hidden");
+        gameArea.classList.add("hidden");
+        document.getElementById("tab-home")?.classList.remove("hidden");
+        renderOnlinePlayers();
         renderLobbies();
-        alert("Заявка успешно опубликована!");
+    });
+
+    document.getElementById("btn-quit")?.addEventListener("click", () => {
+        gameArea.classList.add("hidden");
+        document.getElementById("tab-home")?.classList.remove("hidden");
     });
 
     // Магазин
@@ -191,73 +435,8 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Игра с ИИ
-    document.getElementById("btn-ai")?.addEventListener("click", () => {
-        tabContents.forEach(c => c.classList.add("hidden"));
-        gameArea.classList.remove("hidden");
-        
-        gameState.board = ["", "", "", "", "", "", "", "", ""];
-        gameState.gameActive = true;
-        renderBoard();
-        if (gameStatus) gameStatus.textContent = `Ход: ${userData.equippedSkin.x}`;
-    });
-
-    document.getElementById("btn-quit")?.addEventListener("click", () => {
-        gameArea.classList.add("hidden");
-        document.getElementById("tab-home")?.classList.remove("hidden");
-    });
-
-    function renderBoard() {
-        cells.forEach((cell, idx) => {
-            const val = gameState.board[idx];
-            if (val === "X") cell.textContent = userData.equippedSkin.x;
-            else if (val === "O") cell.textContent = userData.equippedSkin.o;
-            else cell.textContent = "";
-        });
-    }
-
-    cells.forEach(cell => {
-        cell.addEventListener("click", (e) => {
-            const idx = e.target.getAttribute("data-index");
-            if (!gameState.gameActive || gameState.board[idx] !== "") return;
-
-            gameState.board[idx] = "X";
-            renderBoard();
-
-            if (checkWin("X")) {
-                alert("Победа! +50 Креликов");
-                userData.balance += 50;
-                updateUI();
-                gameState.gameActive = false;
-                return;
-            }
-
-            if (!gameState.board.includes("")) {
-                alert("Ничья!");
-                gameState.gameActive = false;
-                return;
-            }
-
-            setTimeout(() => {
-                let empty = gameState.board.map((v, i) => v === "" ? i : null).filter(v => v !== null);
-                if (empty.length > 0) {
-                    let move = empty[Math.floor(Math.random() * empty.length)];
-                    gameState.board[move] = "O";
-                    renderBoard();
-                    if (checkWin("O")) {
-                        alert("Поражение!");
-                        gameState.gameActive = false;
-                    }
-                }
-            }, 300);
-        });
-    });
-
-    function checkWin(symbol) {
-        const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-        return wins.some(p => p.every(i => gameState.board[i] === symbol));
-    }
-
     updateUI();
+    renderOnlinePlayers();
     renderLobbies();
 });
+        
