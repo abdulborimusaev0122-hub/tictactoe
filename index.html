@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tic-tac-toe</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="style.css?v=5">
+    <link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
     <div class="app-wrapper">
         <header>
             <span id="user-name" class="username">Игрок</span>
             <div class="balance-badge">
-                🪙 <span id="user-balance">200</span> Креликов
+                🪙 <span id="user-balance">200</span>
             </div>
         </header>
 
@@ -22,13 +22,12 @@
                 🤖 Играть с ИИ
             </button>
 
-            <!-- Онлайн игроки и управление -->
+            <!-- Онлайн игроки -->
             <div class="section-header">
                 <span class="section-title">🌐 Игроки Онлайн</span>
                 <button id="btn-refresh-online" class="btn-icon" title="Обновить">🔄</button>
             </div>
 
-            <!-- Поиск игроков -->
             <div class="search-box">
                 <input type="text" id="input-search-player" placeholder="🔍 Поиск друга..." />
             </div>
@@ -37,8 +36,8 @@
                 <div class="empty-state">Загрузка игроков...</div>
             </div>
 
-            <!-- Входящие вызовы -->
-            <div class="section-title">⚔️ Входящие дуэли</div>
+            <!-- Входящие дуэли -->
+            <div class="section-title" style="margin-top:15px;">⚔️ Входящие дуэли</div>
             <div id="lobbies-list" class="lobbies-container">
                 <div class="empty-state">Нет активных заявок</div>
             </div>
@@ -66,7 +65,7 @@
             </div>
         </div>
 
-        <!-- Экран колеса жеребьёвки -->
+        <!-- Колесо жеребьёвки -->
         <section id="wheel-area" class="hidden">
             <div class="status-text">Определение ролей (❌ или ⭕)...</div>
             <div class="wheel-container">
@@ -106,26 +105,55 @@
             </div>
         </div>
 
-        <!-- Магазин -->
+        <!-- Магазин скинов -->
         <main id="tab-shop" class="tab-content hidden">
-            <h2 class="page-title">Магазин скинов</h2>
-            <div id="shop-list"></div>
+            <h2 class="page-title">🛍️ Магазин скинов</h2>
+            <div id="shop-list" class="shop-grid"></div>
         </main>
 
         <!-- Лидерборд -->
         <main id="tab-leaderboard" class="tab-content hidden">
-            <h2 class="page-title">Лидерборд</h2>
+            <h2 class="page-title">🏆 Топ Игроков</h2>
             <div id="leaderboard-list">
-                <p style="color: #8a9ba8; text-align: center;">Загрузка списка игроков...</p>
+                <p style="color: #8a9ba8; text-align: center;">Загрузка рейтинга...</p>
             </div>
         </main>
 
-        <!-- Профиль -->
+        <!-- Красивый профиль -->
         <main id="tab-profile" class="tab-content hidden">
-            <h2 class="page-title">Профиль</h2>
-            <div class="profile-card">
-                <p>Имя: <b id="prof-name">Игрок</b></p>
-                <p>Баланс: <b id="prof-balance">200</b> Креликов</p>
+            <div class="profile-card-fancy">
+                <div class="profile-avatar-container">
+                    <div class="profile-avatar" id="prof-avatar">🎮</div>
+                    <span class="profile-tag" id="prof-tag">Новичок</span>
+                </div>
+                <h2 class="profile-title" id="prof-name">Игрок</h2>
+                
+                <!-- Уровень и опыт -->
+                <div class="level-box">
+                    <div class="level-info">
+                        <span>Уровень <b id="prof-level">1</b></span>
+                        <span id="prof-xp-text">0 / 100 XP</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="prof-xp-bar"></div>
+                    </div>
+                </div>
+
+                <!-- Статистика -->
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-val" id="prof-balance">200</span>
+                        <span class="stat-label">Монет 🪙</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-val" id="prof-wins">0</span>
+                        <span class="stat-label">Побед 🏆</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-val" id="prof-skin-name">Классический</span>
+                        <span class="stat-label">Скин 🎨</span>
+                    </div>
+                </div>
             </div>
         </main>
 
@@ -150,6 +178,6 @@
         </nav>
     </div>
 
-    <script src="script.js?v=5"></script>
+    <script src="script.js?v=6"></script>
 </body>
 </html>
