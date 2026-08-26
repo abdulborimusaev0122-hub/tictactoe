@@ -54,13 +54,17 @@ document.addEventListener("DOMContentLoaded", () => {
         isAiGame: true
     };
 
-    function updateUI() {
+        function updateUI() {
+        if (!userData.level || isNaN(userData.level)) userData.level = 1;
+        if (userData.xp === undefined || isNaN(userData.xp)) userData.xp = 0;
+
         let tag = "Новичок";
         if (userData.level >= 3) tag = "Любитель";
         if (userData.level >= 5) tag = "Мастер ⚡";
         if (userData.level >= 8) tag = "Легенда 👑";
 
-        const neededXp = userData.level * 100;
+        // ТЕПЕРЬ НУЖНО 1000 XP УМНОЖЕННОЕ НА ТЕКУЩИЙ УРОВЕНЬ
+        const neededXp = userData.level * 1000;
         const xpPercent = Math.min(100, Math.floor((userData.xp / neededXp) * 100));
 
         document.getElementById("user-balance").textContent = userData.balance;
