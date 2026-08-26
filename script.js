@@ -37,12 +37,42 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.setItem("tictactoe_user_data", JSON.stringify(userData));
     }
 
+    // --- ОНЛАЙН СЕТЬ FIREBASE ---
+    // 1. Отправляем статус онлайн
+    const playerRef = db.ref('players/' + userData.id);
+    playerRef.set({
+        id: userData.id,
+        name: userData.name,
+        level: userData.level || 1,
+        wins: userData.wins || 0,
+        status: "online",
+        lastSeen: Date.now()
+    });
+
+    // Автоматическое удаление из сети при закрытии игры
+    playerRef.onDisconnect().remove();
+
     let selectedDifficulty = "easy";
     let selectedPlayerForChallenge = null;
 
-    // Демо-игроки удалены. Здесь будет список реальных игроков с сервера.
     let allOnlinePlayers = [];
     let localLobbies = [];
+
+    // 2. Слушаем подключенных реальных игроков из базы
+    db.ref('players').on('value', (snapshot) => {
+        const data = snapshot.val();
+        allOnlinePlayers = [];
+        
+        if (data) {
+            Object.keys(data).forEach(key => {
+                // Не показываем самого себя в списке противников
+                if (String(key) !== String(userData.id)) {
+                    allOnlinePlayers.push(data[key]);
+                }
+            });
+        }
+        renderOnlinePlayers();
+    });
 
     const skinsCatalog = [
         { id: "default", name: "Классика", x: "❌", o: "⭕", price: 0 },
@@ -71,7 +101,16 @@ document.addEventListener("DOMContentLoaded", () => {
         isAiGame: true
     };
 
-        function updateUI() {
+    function checkLevelUp() {
+        const neededXp = userData.level * 1000;
+        if (userData.xp >= neededXp) {
+            userData.xp -= neededXp;
+            userData.level += 1;
+            alert(`🎉 Поздравляем! Ты alcanzó ${userData.level} уровень!`);
+        }
+    }
+
+    function updateUI() {
         if (!userData.level || isNaN(userData.level)) userData.level = 1;
         if (userData.xp === undefined || isNaN(userData.xp)) userData.xp = 0;
 
@@ -80,7 +119,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (userData.level >= 5) tag = "Мастер ⚡";
         if (userData.level >= 8) tag = "Легенда 👑";
 
-        // ТЕПЕРЬ НУЖНО 1000 XP УМНОЖЕННОЕ НА ТЕКУЩИЙ УРОВЕНЬ
         const neededXp = userData.level * 1000;
         const xpPercent = Math.min(100, Math.floor((userData.xp / neededXp) * 100));
 
@@ -138,7 +176,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const filtered = allOnlinePlayers.filter(p => p.name.toLowerCase().includes(query));
 
         if (filtered.length === 0) {
-            listEl.innerHTML = `<div class="empty-state">Нет игроков в сети. Для игры с друзьями нужен сервер.</div>`;
+            listEl.innerHTML = `<div class="empty-state">Нет других игроков в сети.</div>`;
             return;
         }
 
@@ -146,7 +184,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const card = document.createElement("div");
             card.className = "player-online-card";
             card.innerHTML = `
-                <span style="font-weight:bold;">${player.name}</span>
+                <span style="font-weight:bold;">${player.name} (Ур. ${player.level || 1})</span>
                 <span style="color:#38ef7d; font-size:12px;">Онлайн 🟢</span>
             `;
             card.addEventListener("click", () => {
@@ -305,23 +343,23 @@ document.addEventListener("DOMContentLoaded", () => {
             renderBoard();
 
             if (checkWin(gameState.currentPlayer)) {
-            userData.balance += 50;
-            userData.wins += 1;
-            userData.xp += 70; // Стало +70 XP
+                userData.balance += 50;
+                userData.wins += 1;
+                userData.xp += 70;
 
-            checkLevelUp(); // Используем функцию проверки уровня
-            updateUI();
-            showGameOver(true, "Вы выиграли! +50 🪙 и +70 XP");
-            return;
+                checkLevelUp();
+                updateUI();
+                showGameOver(true, "Вы выиграли! +50 🪙 и +70 XP");
+                return;
             }
 
             if (!gameState.board.includes("")) {
-            userData.xp += 20; // +20 XP за ничью
-            checkLevelUp();
-            updateUI();
-            showGameOver(false, "Ничья! +20 XP");
-            return;
-}
+                userData.xp += 20;
+                checkLevelUp();
+                updateUI();
+                showGameOver(false, "Ничья! +20 XP");
+                return;
+            }
 
             gameState.currentPlayer = gameState.currentPlayer === "X" ? "O" : "X";
             updateGameStatus();
@@ -344,21 +382,19 @@ document.addEventListener("DOMContentLoaded", () => {
         renderBoard();
 
         if (checkWin(gameState.aiSymbol)) {
-    userData.xp = Math.max(0, userData.xp - 10); // Отнимаем 10 XP
-    updateUI();
-    showGameOver(false, "ИИ победил! -10 XP");
-    return;
-}
-
+            userData.xp = Math.max(0, userData.xp - 10);
+            updateUI();
+            showGameOver(false, "ИИ победил! -10 XP");
+            return;
+        }
 
         if (!gameState.board.includes("")) {
-    userData.xp += 20; // +20 XP за ничью
-    checkLevelUp();
-    updateUI();
-    showGameOver(false, "Ничья! +20 XP");
-    return;
-}
-
+            userData.xp += 20;
+            checkLevelUp();
+            updateUI();
+            showGameOver(false, "Ничья! +20 XP");
+            return;
+        }
 
         gameState.currentPlayer = gameState.playerSymbol;
         updateGameStatus();
@@ -458,16 +494,4 @@ document.addEventListener("DOMContentLoaded", () => {
         document.querySelectorAll(".btn-equip").forEach(btn => {
             btn.addEventListener("click", (e) => {
                 const skinId = e.target.getAttribute("data-id");
-                const skin = skinsCatalog.find(s => s.id === skinId);
-                userData.equippedSkin = skin;
-                updateUI();
-                renderShop();
-            });
-        });
-    }
-
-    updateUI();
-    renderOnlinePlayers();
-    renderLobbies();
-});
-                                                 
+           
