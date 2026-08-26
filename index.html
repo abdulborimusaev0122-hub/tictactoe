@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tic-tac-toe</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="style.css?v=3">
+    <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
     <div class="app-wrapper">
@@ -22,8 +22,17 @@
                 🤖 Играть с ИИ
             </button>
 
-            <!-- Онлайн игроки -->
-            <div class="section-title">🌐 Игроки Онлайн</div>
+            <!-- Онлайн игроки и управление -->
+            <div class="section-header">
+                <span class="section-title">🌐 Игроки Онлайн</span>
+                <button id="btn-refresh-online" class="btn-icon" title="Обновить">🔄</button>
+            </div>
+
+            <!-- Поиск игроков -->
+            <div class="search-box">
+                <input type="text" id="input-search-player" placeholder="🔍 Поиск друга..." />
+            </div>
+
             <div id="online-players-list" class="lobbies-container">
                 <div class="empty-state">Загрузка игроков...</div>
             </div>
@@ -59,7 +68,7 @@
 
         <!-- Экран колеса жеребьёвки -->
         <section id="wheel-area" class="hidden">
-            <div class="status-text">Определение первого хода...</div>
+            <div class="status-text">Определение ролей (❌ или ⭕)...</div>
             <div class="wheel-container">
                 <div class="wheel-pointer">▼</div>
                 <div id="wheel" class="wheel">
@@ -67,7 +76,7 @@
                     <div class="wheel-sector sector-o">⭕</div>
                 </div>
             </div>
-            <div id="wheel-result" class="status-text" style="margin-top: 15px;"></div>
+            <div id="wheel-result" class="status-text" style="margin-top: 15px;">Крутим колесо...</div>
         </section>
 
         <!-- Игровое поле -->
@@ -141,7 +150,6 @@
         </nav>
     </div>
 
-    
-    <script src="script.js?v=3"></script>
+    <script src="script.js?v=5"></script>
 </body>
 </html>
