@@ -6,7 +6,7 @@
 }
 
 body {
-    background-color: #1b2735;
+    background-color: #111b27;
     color: #ffffff;
     display: flex;
     justify-content: center;
@@ -35,13 +35,13 @@ header {
 }
 
 .balance-badge {
-    background-color: #0d2847;
+    background: linear-gradient(135deg, #1d3b5a, #0c1e30);
     color: #38ef7d;
-    border: 1px solid #1a426e;
+    border: 1px solid #2a527a;
     padding: 6px 14px;
     border-radius: 20px;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .btn {
@@ -55,8 +55,8 @@ header {
     cursor: pointer;
 }
 
-.btn-blue-bright { background-color: #2a9df4; }
-.btn-blue-dark { background-color: #214361; }
+.btn-blue-bright { background: linear-gradient(135deg, #2a9df4, #1572b6); }
+.btn-blue-dark { background-color: #1e364d; }
 
 .section-header {
     display: flex;
@@ -72,27 +72,23 @@ header {
 }
 
 .btn-icon {
-    background: #121d28;
-    border: 1px solid #214361;
+    background: #182838;
+    border: 1px solid #284460;
     color: white;
     padding: 6px 10px;
     border-radius: 8px;
     cursor: pointer;
-    font-size: 14px;
-}
-
-.search-box {
-    margin-bottom: 10px;
 }
 
 .search-box input {
     width: 100%;
     padding: 10px;
     border-radius: 8px;
-    border: 1px solid #214361;
-    background: #121d28;
+    border: 1px solid #284460;
+    background: #182838;
     color: white;
     font-size: 14px;
+    margin-bottom: 10px;
 }
 
 .lobbies-container {
@@ -105,13 +101,13 @@ header {
     color: #8a9ba8;
     text-align: center;
     padding: 15px;
-    background-color: #121d28;
+    background-color: #182838;
     border-radius: 12px;
     font-size: 14px;
 }
 
-.duel-card, .player-online-card {
-    background-color: #121d28;
+.player-online-card, .duel-card {
+    background-color: #182838;
     border-radius: 12px;
     padding: 12px 14px;
     display: flex;
@@ -119,45 +115,137 @@ header {
     align-items: center;
 }
 
-.player-online-card {
-    cursor: pointer;
-    border: 1px solid transparent;
-}
-
-.player-online-card:hover {
-    border-color: #2a9df4;
-}
-
-.duel-actions {
+/* Магазин скинов */
+.shop-grid {
     display: flex;
-    gap: 6px;
+    flex-direction: column;
+    gap: 12px;
 }
 
-.opponent-name {
-    font-weight: 700;
-    font-size: 15px;
+.shop-card {
+    background: linear-gradient(135deg, #182838, #101c28);
+    border: 1px solid #264361;
+    padding: 14px;
+    border-radius: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.btn-accept {
-    background-color: #2a9df4;
-    border: none;
-    color: white;
-    padding: 8px 14px;
-    border-radius: 8px;
-    font-weight: 700;
+.skin-icons {
+    font-size: 24px;
+    margin-top: 4px;
+}
+
+/* Красивый профиль */
+.profile-card-fancy {
+    background: linear-gradient(145deg, #1a2c3f, #111d2b);
+    border: 1px solid #2a4766;
+    border-radius: 20px;
+    padding: 24px 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+.profile-avatar-container {
+    position: relative;
+    margin-bottom: 12px;
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #2a9df4, #0052d4);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 40px;
+    border: 3px solid #38ef7d;
+}
+
+.profile-tag {
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ff9f43;
+    color: #111;
+    font-weight: 800;
+    font-size: 10px;
+    padding: 3px 10px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.profile-title {
+    font-size: 22px;
+    font-weight: 800;
+    margin-top: 5px;
+    margin-bottom: 15px;
+}
+
+.level-box {
+    width: 100%;
+    background: #101a26;
+    padding: 12px 14px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+
+.level-info {
+    display: flex;
+    justify-content: space-between;
     font-size: 13px;
-    cursor: pointer;
+    color: #a0b3c6;
+    margin-bottom: 6px;
 }
 
-.btn-decline {
-    background-color: #e74c3c;
-    border: none;
-    color: white;
-    padding: 8px 10px;
-    border-radius: 8px;
-    font-weight: 700;
-    font-size: 13px;
-    cursor: pointer;
+.progress-bar-bg {
+    width: 100%;
+    height: 8px;
+    background: #1f3347;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #2a9df4, #38ef7d);
+    border-radius: 4px;
+    transition: width 0.4s ease;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    width: 100%;
+}
+
+.stat-item {
+    background: #101a26;
+    padding: 12px 8px;
+    border-radius: 12px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-val {
+    font-size: 16px;
+    font-weight: 800;
+    color: #38ef7d;
+}
+
+.stat-label {
+    font-size: 11px;
+    color: #8a9ba8;
+    margin-top: 2px;
 }
 
 /* Колесо жеребьёвки */
@@ -170,8 +258,7 @@ header {
 
 .wheel-pointer {
     position: absolute;
-    top: -15px;
-    left: 50%;
+    top: -15px; left: 50%;
     transform: translateX(-50%);
     font-size: 24px;
     color: #38ef7d;
@@ -185,7 +272,7 @@ header {
     border: 4px solid #2a9df4;
     position: relative;
     overflow: hidden;
-    background: conic-gradient(#121d28 0deg 180deg, #214361 180deg 360deg);
+    background: conic-gradient(#182838 0deg 180deg, #264361 180deg 360deg);
 }
 
 .wheel-sector {
@@ -210,7 +297,7 @@ header {
 
 .cell {
     aspect-ratio: 1;
-    background-color: #121d28;
+    background-color: #182838;
     border-radius: 12px;
     display: flex;
     justify-content: center;
@@ -231,24 +318,11 @@ header {
     margin-bottom: 15px;
 }
 
-.profile-card, .shop-item {
-    background-color: #121d28;
-    padding: 12px;
-    border-radius: 12px;
-    margin-bottom: 10px;
-}
-
-.shop-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
 /* Модалки */
 .modal {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0,0,0,0.75);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -257,7 +331,7 @@ header {
 }
 
 .modal-content {
-    background-color: #121d28;
+    background-color: #182838;
     padding: 20px;
     border-radius: 14px;
     width: 100%;
@@ -278,7 +352,7 @@ header {
 .bottom-nav {
     position: fixed;
     bottom: 0; left: 0; right: 0;
-    background-color: #121d28;
+    background-color: #101c28;
     display: flex;
     justify-content: space-around;
     padding: 8px 0;
