@@ -17,7 +17,11 @@ const db = firebase.database();
 
 document.addEventListener("DOMContentLoaded", () => {
     const tg = window.Telegram?.WebApp;
-    if (tg) tg.expand();
+    if (tg) {
+    tg.ready();
+    tg.expand();
+    }
+    
 
     const savedData = localStorage.getItem("tictactoe_user_data");
     
