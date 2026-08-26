@@ -19,7 +19,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const tg = window.Telegram?.WebApp;
     if (tg) tg.expand();
 
-    // Загрузка сохранённых данных из localStorage
     const savedData = localStorage.getItem("tictactoe_user_data");
     
     let userData = savedData ? JSON.parse(savedData) : {
@@ -37,41 +36,42 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.setItem("tictactoe_user_data", JSON.stringify(userData));
     }
 
-    // --- ОНЛАЙН СЕТЬ FIREBASE ---
-    // 1. Отправляем статус онлайн
+    // --- СЕТЕВАЯ ИНИЦИАЛИЗАЦИЯ ---
     const playerRef = db.ref('players/' + userData.id);
     playerRef.set({
         id: userData.id,
         name: userData.name,
         level: userData.level || 1,
         wins: userData.wins || 0,
-        status: "online",
-        lastSeen: Date.now()
+        status: "online"
     });
-
-    // Автоматическое удаление из сети при закрытии игры
     playerRef.onDisconnect().remove();
 
     let selectedDifficulty = "easy";
     let selectedPlayerForChallenge = null;
+    let currentGameId = null;
+    let currentGameRef = null;
 
     let allOnlinePlayers = [];
-    let localLobbies = [];
 
-    // 2. Слушаем подключенных реальных игроков из базы
+                              // Слушаем онлайн игроков
     db.ref('players').on('value', (snapshot) => {
         const data = snapshot.val();
         allOnlinePlayers = [];
-        
         if (data) {
             Object.keys(data).forEach(key => {
-                // Не показываем самого себя в списке противников
                 if (String(key) !== String(userData.id)) {
                     allOnlinePlayers.push(data[key]);
                 }
             });
         }
         renderOnlinePlayers();
+    });
+
+    // Слушаем входящие вызовы по сети
+    db.ref('challenges/' + userData.id).on('value', (snapshot) => {
+        const challenges = snapshot.val();
+        renderLobbies(challenges);
     });
 
     const skinsCatalog = [
@@ -136,8 +136,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         saveData();
     }
-
-    // Навигация
+        // Навигация
     const navButtons = document.querySelectorAll(".nav-btn");
     const tabContents = document.querySelectorAll(".tab-content");
 
@@ -154,20 +153,12 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById(targetTab)?.classList.remove("hidden");
 
             if (targetTab === "tab-shop") renderShop();
-            if (targetTab === "tab-home") {
-                renderOnlinePlayers();
-                renderLobbies();
-            }
+            if (targetTab === "tab-home") renderOnlinePlayers();
             if (targetTab === "tab-profile") updateUI();
         });
     });
 
-    // Отрисовка списка онлайн игроков
-    document.getElementById("btn-refresh-online")?.addEventListener("click", () => renderOnlinePlayers());
-    document.getElementById("input-search-player")?.addEventListener("input", (e) => {
-        renderOnlinePlayers(e.target.value.toLowerCase());
-    });
-
+    // Список игроков онлайн
     function renderOnlinePlayers(query = "") {
         const listEl = document.getElementById("online-players-list");
         if (!listEl) return;
@@ -185,7 +176,7 @@ document.addEventListener("DOMContentLoaded", () => {
             card.className = "player-online-card";
             card.innerHTML = `
                 <span style="font-weight:bold;">${player.name} (Ур. ${player.level || 1})</span>
-                <span style="color:#38ef7d; font-size:12px;">Онлайн 🟢</span>
+                <span style="color:#38ef7d; font-size:12px;">Вызвать ⚔️</span>
             `;
             card.addEventListener("click", () => {
                 selectedPlayerForChallenge = player;
@@ -200,32 +191,41 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("modal-player-info").classList.add("hidden");
     });
 
+    // Отправка сетевого вызова
     document.getElementById("btn-send-challenge")?.addEventListener("click", () => {
         if (!selectedPlayerForChallenge) return;
-        localLobbies.push({ authorName: selectedPlayerForChallenge.name });
+
+        const challengeId = "ch_" + Date.now();
+        db.ref('challenges/' + selectedPlayerForChallenge.id + '/' + challengeId).set({
+            fromId: userData.id,
+            fromName: userData.name,
+            challengeId: challengeId
+        });
+
         document.getElementById("modal-player-info").classList.add("hidden");
-        renderLobbies();
         alert(`Заявка отправлена игроку ${selectedPlayerForChallenge.name}!`);
     });
 
-    function renderLobbies() {
+    // Отрисовка списка входящих вызовов
+    function renderLobbies(challenges) {
         const listEl = document.getElementById("lobbies-list");
         if (!listEl) return;
         listEl.innerHTML = "";
 
-        if (localLobbies.length === 0) {
+        if (!challenges) {
             listEl.innerHTML = `<div class="empty-state">Нет активных заявок</div>`;
             return;
         }
 
-        localLobbies.forEach((lobby, index) => {
+        Object.keys(challenges).forEach(chId => {
+            const item = challenges[chId];
             const card = document.createElement("div");
             card.className = "duel-card";
             card.innerHTML = `
-                <span>${lobby.authorName} (Вызов)</span>
+                <span><b>${item.fromName}</b> вызывает тебя!</span>
                 <div>
-                    <button class="btn-accept" data-index="${index}">Принять</button>
-                    <button class="btn-decline" data-index="${index}">✕</button>
+                    <button class="btn-accept" data-id="${chId}" data-from="${item.fromId}">Принять</button>
+                    <button class="btn-decline" data-id="${chId}">✕</button>
                 </div>
             `;
             listEl.appendChild(card);
@@ -233,23 +233,92 @@ document.addEventListener("DOMContentLoaded", () => {
 
         document.querySelectorAll(".btn-accept").forEach(btn => {
             btn.addEventListener("click", (e) => {
-                const idx = e.target.getAttribute("data-index");
-                localLobbies.splice(idx, 1);
-                renderLobbies();
-                startWheelSpin(false);
+                const chId = e.target.getAttribute("data-id");
+                const opponentId = e.target.getAttribute("data-from");
+
+                // Удаляем вызов и создаем сетевую комнатную игру
+                db.ref('challenges/' + userData.id + '/' + chId).remove();
+                
+                const gameId = "game_" + Date.now();
+                db.ref('games/' + gameId).set({
+                    board: ["", "", "", "", "", "", "", "", ""],
+                    turn: "X",
+                    playerX: opponentId,
+                    playerO: userData.id,
+                    status: "active"
+                });
+
+                // Уведомляем противника
+                db.ref('active_games/' + opponentId).set({ gameId: gameId, symbol: "X" });
+                startOnlineGame(gameId, "O");
             });
         });
 
         document.querySelectorAll(".btn-decline").forEach(btn => {
             btn.addEventListener("click", (e) => {
-                const idx = e.target.getAttribute("data-index");
-                localLobbies.splice(idx, 1);
-                renderLobbies();
+                const chId = e.target.getAttribute("data-id");
+                db.ref('challenges/' + userData.id + '/' + chId).remove();
             });
         });
     }
 
-    // Выбор сложности ИИ
+    // Ожидание подключения к созданной игре для вызвавшего игрока
+    db.ref('active_games/' + userData.id).on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data && data.gameId) {
+            const gameId = data.gameId;
+            const mySymbol = data.symbol;
+            db.ref('active_games/' + userData.id).remove();
+            startOnlineGame(gameId, mySymbol);
+        }
+    });
+
+    // Запуск сетевого матча
+    function startOnlineGame(gameId, symbol) {
+        currentGameId = gameId;
+        currentGameRef = db.ref('games/' + gameId);
+
+        gameState.isAiGame = false;
+        gameState.playerSymbol = symbol;
+        
+        tabContents.forEach(c => c.classList.add("hidden"));
+        document.getElementById("game-area").classList.remove("hidden");
+
+        // Подписываемся на обновления доски в Firebase
+        currentGameRef.on('value', (snapshot) => {
+            const gameData = snapshot.val();
+            if (!gameData) return;
+
+            gameState.board = gameData.board;
+            gameState.currentPlayer = gameData.turn;
+            gameState.gameActive = gameData.status === "active";
+
+            renderBoard();
+            updateGameStatus();
+
+            if (gameData.winner) {
+                if (gameData.winner === gameState.playerSymbol) {
+                    userData.balance += 50;
+                    userData.wins += 1;
+                    userData.xp += 70;
+                    checkLevelUp();
+                    updateUI();
+                    showGameOver(true, "Вы победили в онлайн-дуэли! +50 🪙 и +70 XP");
+                } else if (gameData.winner === "draw") {
+                    userData.xp += 20;
+                    checkLevelUp();
+                    updateUI();
+                    showGameOver(false, "Ничья! +20 XP");
+                } else {
+                    userData.xp = Math.max(0, userData.xp - 10);
+                    updateUI();
+                    showGameOver(false, "Соперник победил! -10 XP");
+                }
+                currentGameRef.off();
+            }
+        });
+               }
+                                // Выбор сложности ИИ
     const modalAi = document.getElementById("modal-ai");
     document.getElementById("btn-open-ai-modal")?.addEventListener("click", () => modalAi.classList.remove("hidden"));
     document.getElementById("btn-cancel-ai")?.addEventListener("click", () => modalAi.classList.add("hidden"));
@@ -257,64 +326,27 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btn-ai-easy")?.addEventListener("click", () => {
         selectedDifficulty = "easy";
         modalAi.classList.add("hidden");
-        startWheelSpin(true);
+        initAiGame();
     });
 
     document.getElementById("btn-ai-hard")?.addEventListener("click", () => {
         selectedDifficulty = "hard";
         modalAi.classList.add("hidden");
-        startWheelSpin(true);
+        initAiGame();
     });
 
-    // Анимация Колеса
-    function startWheelSpin(isAi) {
+    function initAiGame() {
         tabContents.forEach(c => c.classList.add("hidden"));
-        const wheelArea = document.getElementById("wheel-area");
-        wheelArea.classList.remove("hidden");
-
-        const wheel = document.getElementById("wheel");
-        const resultEl = document.getElementById("wheel-result");
-        resultEl.textContent = "Крутим колесо...";
-
-        wheel.style.transition = "none";
-        wheel.style.transform = "rotate(0deg)";
-
-        setTimeout(() => {
-            wheel.style.transition = "transform 3s cubic-bezier(0.15, 0.85, 0.35, 1.2)";
-            
-            const isUserX = Math.random() < 0.5;
-            const degree = isUserX ? (5 * 360 + 90) : (5 * 360 + 270);
-
-            wheel.style.transform = `rotate(${degree}deg)`;
-
-            setTimeout(() => {
-                const userSymbol = isUserX ? "X" : "O";
-                const userIcon = isUserX ? userData.equippedSkin.x : userData.equippedSkin.o;
-                resultEl.textContent = `Твой символ: ${userIcon}!`;
-
-                setTimeout(() => {
-                    wheelArea.classList.add("hidden");
-                    initGame(isAi, userSymbol);
-                }, 1200);
-            }, 3000);
-        }, 50);
-    }
-
-    function initGame(isAi, userSymbol) {
         document.getElementById("game-area").classList.remove("hidden");
         gameState.board = ["", "", "", "", "", "", "", "", ""];
         gameState.gameActive = true;
-        gameState.isAiGame = isAi;
-        gameState.playerSymbol = userSymbol;
-        gameState.aiSymbol = userSymbol === "X" ? "O" : "X";
+        gameState.isAiGame = true;
+        gameState.playerSymbol = "X";
+        gameState.aiSymbol = "O";
         gameState.currentPlayer = "X";
 
         renderBoard();
         updateGameStatus();
-
-        if (isAi && gameState.playerSymbol === "O") {
-            setTimeout(makeAiMove, 500);
-        }
     }
 
     function updateGameStatus() {
@@ -332,12 +364,39 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // Клик по клетке
     document.querySelectorAll(".cell").forEach(cell => {
         cell.addEventListener("click", (e) => {
             const idx = e.target.getAttribute("data-index");
             
             if (!gameState.gameActive || gameState.board[idx] !== "") return;
-            if (gameState.isAiGame && gameState.currentPlayer !== gameState.playerSymbol) return;
+
+            // Если игра сетевая
+            if (!gameState.isAiGame) {
+                if (gameState.currentPlayer !== gameState.playerSymbol) return;
+
+                const newBoard = [...gameState.board];
+                newBoard[idx] = gameState.playerSymbol;
+                const nextTurn = gameState.playerSymbol === "X" ? "O" : "X";
+
+                let winner = null;
+                if (checkWinBoard(newBoard, gameState.playerSymbol)) {
+                    winner = gameState.playerSymbol;
+                } else if (!newBoard.includes("")) {
+                    winner = "draw";
+                }
+
+                currentGameRef.update({
+                    board: newBoard,
+                    turn: nextTurn,
+                    status: winner ? "finished" : "active",
+                    winner: winner
+                });
+                return;
+            }
+
+            // Если игра с ИИ
+            if (gameState.currentPlayer !== gameState.playerSymbol) return;
 
             gameState.board[idx] = gameState.currentPlayer;
             renderBoard();
@@ -346,7 +405,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 userData.balance += 50;
                 userData.wins += 1;
                 userData.xp += 70;
-
                 checkLevelUp();
                 updateUI();
                 showGameOver(true, "Вы выиграли! +50 🪙 и +70 XP");
@@ -361,12 +419,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            gameState.currentPlayer = gameState.currentPlayer === "X" ? "O" : "X";
+            gameState.currentPlayer = "O";
             updateGameStatus();
-
-            if (gameState.isAiGame && gameState.currentPlayer === gameState.aiSymbol) {
-                setTimeout(makeAiMove, 400);
-            }
+            setTimeout(makeAiMove, 400);
         });
     });
 
@@ -420,8 +475,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function checkWin(symbol) {
+        return checkWinBoard(gameState.board, symbol);
+    }
+
+    function checkWinBoard(board, symbol) {
         const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-        return wins.some(p => p.every(i => gameState.board[i] === symbol));
+        return wins.some(p => p.every(i => board[i] === symbol));
     }
 
     function showGameOver(isWin, desc) {
@@ -438,10 +497,10 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("game-area").classList.add("hidden");
         document.getElementById("tab-home")?.classList.remove("hidden");
         renderOnlinePlayers();
-        renderLobbies();
     });
 
     document.getElementById("btn-quit")?.addEventListener("click", () => {
+        if (currentGameRef) currentGameRef.off();
         document.getElementById("game-area").classList.add("hidden");
         document.getElementById("tab-home")?.classList.remove("hidden");
     });
@@ -494,4 +553,15 @@ document.addEventListener("DOMContentLoaded", () => {
         document.querySelectorAll(".btn-equip").forEach(btn => {
             btn.addEventListener("click", (e) => {
                 const skinId = e.target.getAttribute("data-id");
-           
+                const skin = skinsCatalog.find(s => s.id === skinId);
+                userData.equippedSkin = skin;
+                updateUI();
+                renderShop();
+            });
+        });
+    }
+
+    updateUI();
+    renderOnlinePlayers();
+});
+                        
