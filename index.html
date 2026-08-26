@@ -18,35 +18,59 @@
 
         <!-- Главная -->
         <main id="tab-home" class="tab-content">
-            <button id="btn-ai" class="btn btn-blue-bright">
+            <button id="btn-open-ai-modal" class="btn btn-blue-bright">
                 🤖 Играть с ИИ
             </button>
 
-            <div class="section-title">⚔️ Активные заявки (Онлайн дуэли)</div>
+            <!-- Онлайн игроки -->
+            <div class="section-title">🌐 Игроки Онлайн</div>
+            <div id="online-players-list" class="lobbies-container">
+                <div class="empty-state">Загрузка игроков...</div>
+            </div>
+
+            <!-- Входящие вызовы -->
+            <div class="section-title">⚔️ Входящие дуэли</div>
             <div id="lobbies-list" class="lobbies-container">
                 <div class="empty-state">Нет активных заявок</div>
             </div>
-
-            <div class="section-title">➕ Создать заявку</div>
-            <button id="btn-open-create" class="btn btn-blue-dark">
-                Опубликовать заявку (+200 XP)
-            </button>
         </main>
 
-        <!-- Модалка создания заявки -->
-        <div id="modal-create" class="modal hidden">
+        <!-- Модалка выбора сложности ИИ -->
+        <div id="modal-ai" class="modal hidden">
             <div class="modal-content">
-                <h3>Создать дуэль</h3>
-                <label style="font-size:13px; color:#8a9ba8;">Укажи ставку (Крелики):</label>
-                <input type="number" id="input-stake" value="50" min="10" max="1000">
+                <h3>Выбери сложность</h3>
+                <button id="btn-ai-easy" class="btn btn-blue-bright">🟢 Легкая</button>
+                <button id="btn-ai-hard" class="btn btn-blue-dark">🔴 Сложная (Непобедимый)</button>
+                <button id="btn-cancel-ai" class="btn btn-decline" style="margin-top:5px;">Отмена</button>
+            </div>
+        </div>
+
+        <!-- Модалка информации об игроке -->
+        <div id="modal-player-info" class="modal hidden">
+            <div class="modal-content">
+                <h3 id="info-player-name">Игрок</h3>
+                <p style="font-size: 13px; color: #8a9ba8;">Статус: <span style="color:#38ef7d;">В сети 🟢</span></p>
                 <div class="modal-actions">
-                    <button id="btn-confirm-create" class="btn btn-blue-bright">Опубликовать</button>
-                    <button id="btn-cancel-create" class="btn btn-blue-dark">Отмена</button>
+                    <button id="btn-send-challenge" class="btn btn-blue-bright">Кинуть заявку</button>
+                    <button id="btn-close-player-info" class="btn btn-blue-dark">Закрыть</button>
                 </div>
             </div>
         </div>
 
-        <!-- Поле игры -->
+        <!-- Экран колеса жеребьёвки -->
+        <section id="wheel-area" class="hidden">
+            <div class="status-text">Определение первого хода...</div>
+            <div class="wheel-container">
+                <div class="wheel-pointer">▼</div>
+                <div id="wheel" class="wheel">
+                    <div class="wheel-sector sector-x">❌</div>
+                    <div class="wheel-sector sector-o">⭕</div>
+                </div>
+            </div>
+            <div id="wheel-result" class="status-text" style="margin-top: 15px;"></div>
+        </section>
+
+        <!-- Игровое поле -->
         <section id="game-area" class="hidden">
             <div id="game-status" class="status-text">Ход: ❌</div>
             <div class="board" id="board">
@@ -60,8 +84,18 @@
                 <div class="cell" data-index="7"></div>
                 <div class="cell" data-index="8"></div>
             </div>
-            <button id="btn-quit" class="btn btn-blue-dark">Выйти в меню</button>
+            <button id="btn-quit" class="btn btn-blue-dark">Сдаться и выйти</button>
         </section>
+
+        <!-- Модалка конца игры -->
+        <div id="modal-game-over" class="modal hidden">
+            <div class="modal-content text-center">
+                <h2 id="game-over-title">Победа!</h2>
+                <div id="game-over-icon" style="font-size: 50px; margin: 10px 0;">🎉</div>
+                <p id="game-over-desc" style="color: #8a9ba8; font-size: 14px;"></p>
+                <button id="btn-go-home" class="btn btn-blue-bright" style="margin-top: 10px;">Вернуться домой 🏠</button>
+            </div>
+        </div>
 
         <!-- Магазин -->
         <main id="tab-shop" class="tab-content hidden">
