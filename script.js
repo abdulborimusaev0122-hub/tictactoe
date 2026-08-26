@@ -1,3 +1,20 @@
+// Конфигурация и инициализация Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyBnno6oojFNGV7SgLktVr6Ro65UnfUg0Ik",
+    authDomain: "tictactoe-online-cf8e5.firebaseapp.com",
+    databaseURL: "https://tictactoe-online-cf8e5-default-rtdb.firebaseio.com",
+    projectId: "tictactoe-online-cf8e5",
+    storageBucket: "tictactoe-online-cf8e5.firebasestorage.app",
+    messagingSenderId: "224911679143",
+    appId: "1:224911679143:web:4e628064f3f636617ac582",
+    measurementId: "G-JTML3Q850K"
+};
+
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.database();
+
 document.addEventListener("DOMContentLoaded", () => {
     const tg = window.Telegram?.WebApp;
     if (tg) tg.expand();
