@@ -54,6 +54,32 @@ let selectedPlayerForChallenge = null;
 let allOnlinePlayers = [];
 let localLobbies = [];
 
+// Слушаем реальных онлайн-игроков из Firebase
+if (db) {
+    const playerRef = db.ref('players/' + userData.id);
+    playerRef.set({
+        id: userData.id,
+        name: userData.name,
+        level: userData.level || 1,
+        wins: userData.wins || 0,
+        status: "online"
+    });
+    playerRef.onDisconnect().remove();
+
+    db.ref('players').on('value', (snapshot) => {
+        const data = snapshot.val();
+        allOnlinePlayers = [];
+        if (data) {
+            Object.keys(data).forEach(key => {
+                if (String(key) !== String(userData.id)) {
+                    allOnlinePlayers.push(data[key]);
+                }
+            });
+        }
+        renderOnlinePlayers();
+    });
+}
+
 const skinsCatalog = [
     { id: "default", name: "Классика", x: "❌", o: "⭕", price: 0 },
     { id: "fire_ice", name: "Огонь и Лёд", x: "🔥", o: "❄️", price: 100 },
