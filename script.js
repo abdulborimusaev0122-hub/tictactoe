@@ -1,3 +1,9 @@
+window.onerror = function(msg, url, lineNo) {
+    alert("ОШИБКА: " + msg + "\nСтрока: " + lineNo);
+    return false;
+};
+alert("Скрипт запустился!");
+
 // Конфигурация Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyBnno6oojFNGV7SgLktVr6Ro65UnfUg0Ik",
