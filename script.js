@@ -505,7 +505,7 @@ function renderShop() {
             renderShop();
         });
     });
-}
+
 
 // Запуск инициализации событий после полной загрузки страницы
 if (document.readyState === "loading") {
