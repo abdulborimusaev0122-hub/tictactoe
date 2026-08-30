@@ -250,7 +250,7 @@ function initEvents() {
     updateUI();
     renderOnlinePlayers();
     renderLobbies();
-        }
+}
 
 function renderOnlinePlayers(query = "") {
     const listEl = document.getElementById("online-players-list");
@@ -437,6 +437,7 @@ function getBestMove() {
     let empty = gameState.board.map((v, i) => v === "" ? i : null).filter(v => v !== null);
     return empty[Math.floor(Math.random() * empty.length)];
 }
+
 function checkWin(symbol) {
     const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
     return wins.some(p => p.every(i => gameState.board[i] === symbol));
@@ -505,12 +506,12 @@ function renderShop() {
             renderShop();
         });
     });
-
+}
 
 // Запуск инициализации событий после полной загрузки страницы
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initEvents);
 } else {
     initEvents();
-        }
+            }
             
