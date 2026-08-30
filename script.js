@@ -1,4 +1,4 @@
-// Конфигурация и инициализация Firebase
+// Конфигурация Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyBnno6oojFNGV7SgLktVr6Ro65UnfUg0Ik",
     authDomain: "tictactoe-online-cf8e5.firebaseapp.com",
@@ -10,21 +10,30 @@ const firebaseConfig = {
     measurementId: "G-JTML3Q850K"
 };
 
-if (typeof firebase !== 'undefined' && !firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
+// Безопасная инициализация Firebase
+let db = null;
+try {
+    if (typeof firebase !== 'undefined') {
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        db = firebase.database();
+    }
+} catch (e) {
+    console.error("Ошибка Firebase:", e);
 }
-const db = typeof firebase !== 'undefined' ? firebase.database() : null;
 
-// Инициализация Telegram WebApp
+// Telegram WebApp
 const tg = window.Telegram?.WebApp;
 if (tg) {
-    tg.ready();
-    tg.expand();
+    try {
+        tg.ready();
+        tg.expand();
+    } catch(e) {}
 }
 
-// Загрузка сохранённых данных из localStorage
+// Данные пользователя
 const savedData = localStorage.getItem("tictactoe_user_data");
-
 let userData = savedData ? JSON.parse(savedData) : {
     id: tg?.initDataUnsafe?.user?.id || "guest_" + Math.floor(Math.random() * 1000),
     name: tg?.initDataUnsafe?.user?.first_name || "Игрок",
@@ -50,34 +59,37 @@ function checkLevelUp() {
 
 let selectedDifficulty = "easy";
 let selectedPlayerForChallenge = null;
-
 let allOnlinePlayers = [];
 let localLobbies = [];
 
-// Слушаем реальных онлайн-игроков из Firebase
+// Подключение к Firebase
 if (db) {
-    const playerRef = db.ref('players/' + userData.id);
-    playerRef.set({
-        id: userData.id,
-        name: userData.name,
-        level: userData.level || 1,
-        wins: userData.wins || 0,
-        status: "online"
-    });
-    playerRef.onDisconnect().remove();
+    try {
+        const playerRef = db.ref('players/' + userData.id);
+        playerRef.set({
+            id: userData.id,
+            name: userData.name,
+            level: userData.level || 1,
+            wins: userData.wins || 0,
+            status: "online"
+        });
+        playerRef.onDisconnect().remove();
 
-    db.ref('players').on('value', (snapshot) => {
-        const data = snapshot.val();
-        allOnlinePlayers = [];
-        if (data) {
-            Object.keys(data).forEach(key => {
-                if (String(key) !== String(userData.id)) {
-                    allOnlinePlayers.push(data[key]);
-                }
-            });
-        }
-        renderOnlinePlayers();
-    });
+        db.ref('players').on('value', (snapshot) => {
+            const data = snapshot.val();
+            allOnlinePlayers = [];
+            if (data) {
+                Object.keys(data).forEach(key => {
+                    if (String(key) !== String(userData.id)) {
+                        allOnlinePlayers.push(data[key]);
+                    }
+                });
+            }
+            renderOnlinePlayers();
+        });
+    } catch(e) {
+        console.error("Ошибка сети Firebase:", e);
+    }
 }
 
 const skinsCatalog = [
@@ -119,14 +131,17 @@ function updateUI() {
     const neededXp = userData.level * 1000;
     const xpPercent = Math.min(100, Math.floor((userData.xp / neededXp) * 100));
 
-    const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+    const setTxt = (id, txt) => { 
+        const el = document.getElementById(id); 
+        if (el) el.textContent = txt; 
+    };
 
     setTxt("user-balance", userData.balance);
     setTxt("user-name", userData.name);
     setTxt("prof-name", userData.name);
     setTxt("prof-balance", userData.balance);
     setTxt("prof-wins", userData.wins);
-    setTxt("prof-skin-name", userData.equippedSkin.name);
+    setTxt("prof-skin-name", userData.equippedSkin ? userData.equippedSkin.name : "Классика");
     setTxt("prof-level", userData.level);
     setTxt("prof-tag", tag);
     setTxt("prof-xp-text", `${userData.xp} / ${neededXp} XP`);
@@ -138,7 +153,7 @@ function updateUI() {
 }
 
 function initEvents() {
-    // Навигация
+    // Вкладки снизу
     const navButtons = document.querySelectorAll(".nav-btn");
     const tabContents = document.querySelectorAll(".tab-content");
 
@@ -180,10 +195,15 @@ function initEvents() {
         alert(`Заявка отправлена игроку ${selectedPlayerForChallenge.name}!`);
     });
 
-    // Выбор сложности ИИ
+    // Окно игры с ИИ
     const modalAi = document.getElementById("modal-ai");
-    document.getElementById("btn-open-ai-modal")?.addEventListener("click", () => modalAi?.classList.remove("hidden"));
-    document.getElementById("btn-cancel-ai")?.addEventListener("click", () => modalAi?.classList.add("hidden"));
+    document.getElementById("btn-open-ai-modal")?.addEventListener("click", () => {
+        modalAi?.classList.remove("hidden");
+    });
+    
+    document.getElementById("btn-cancel-ai")?.addEventListener("click", () => {
+        modalAi?.classList.add("hidden");
+    });
 
     document.getElementById("btn-ai-easy")?.addEventListener("click", () => {
         selectedDifficulty = "easy";
@@ -197,6 +217,7 @@ function initEvents() {
         startWheelSpin(true);
     });
 
+    // Клики по ячейкам поля
     document.querySelectorAll(".cell").forEach(cell => {
         cell.addEventListener("click", (e) => {
             const idx = e.target.getAttribute("data-index");
@@ -260,7 +281,7 @@ function renderOnlinePlayers(query = "") {
     const filtered = allOnlinePlayers.filter(p => p.name.toLowerCase().includes(query));
 
     if (filtered.length === 0) {
-        listEl.innerHTML = `<div class="empty-state">Нет игроков в сети. Для игры с друзьями нужен сервер.</div>`;
+        listEl.innerHTML = `<div class="empty-state">Нет игроков в сети</div>`;
         return;
     }
 
@@ -273,7 +294,8 @@ function renderOnlinePlayers(query = "") {
         `;
         card.addEventListener("click", () => {
             selectedPlayerForChallenge = player;
-            document.getElementById("info-player-name").textContent = player.name;
+            const nameEl = document.getElementById("info-player-name");
+            if (nameEl) nameEl.textContent = player.name;
             document.getElementById("modal-player-info")?.classList.remove("hidden");
         });
         listEl.appendChild(card);
@@ -446,9 +468,12 @@ function checkWin(symbol) {
 function showGameOver(isWin, desc) {
     gameState.gameActive = false;
     const modal = document.getElementById("modal-game-over");
-    document.getElementById("game-over-title").textContent = isWin ? "ПОБЕДА!" : "ИГРА ОКОНЧЕНА";
-    document.getElementById("game-over-icon").textContent = isWin ? "🎉" : "⚔️";
-    document.getElementById("game-over-desc").textContent = desc;
+    const tEl = document.getElementById("game-over-title");
+    const iEl = document.getElementById("game-over-icon");
+    const dEl = document.getElementById("game-over-desc");
+    if (tEl) tEl.textContent = isWin ? "ПОБЕДА!" : "ИГРА ОКОНЧЕНА";
+    if (iEl) iEl.textContent = isWin ? "🎉" : "⚔️";
+    if (dEl) dEl.textContent = desc;
     modal?.classList.remove("hidden");
 }
 
@@ -459,7 +484,7 @@ function renderShop() {
 
     skinsCatalog.forEach(skin => {
         const isBought = userData.inventory.includes(skin.id);
-        const isEquipped = userData.equippedSkin.id === skin.id;
+        const isEquipped = userData.equippedSkin && userData.equippedSkin.id === skin.id;
 
         const card = document.createElement("div");
         card.className = "shop-card";
@@ -508,10 +533,10 @@ function renderShop() {
     });
 }
 
-// Запуск инициализации событий после полной загрузки страницы
+// Запуск инициализации событий
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initEvents);
 } else {
     initEvents();
-            }
+           }
             
