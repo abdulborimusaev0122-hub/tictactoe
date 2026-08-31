@@ -1,5 +1,5 @@
 window.onerror = function(msg, url, lineNo) {
-    alert("ОШИБКА: " + msg + "\nСтрока: " + lineNo);
+    console.error("ОШИБКА: " + msg + "\nСтрока: " + lineNo);
     return false;
 };
 
@@ -125,14 +125,24 @@ const eventSkinsCatalog = [
     }
 ];
 
-// ОБЫЧНЫЕ СКИНЫ
+// ОБЫЧНЫЕ СКИНЫ (ИСХОДНЫЕ + 10 НОВЫХ)
 const skinsCatalog = [
     { id: "default", name: "Классика", x: "❌", o: "⭕", price: 0 },
+    { id: "emoji", name: "Смайлики", x: "😀", o: "😎", price: 50 },
     { id: "fire_ice", name: "Огонь и Лёд", x: "🔥", o: "❄️", price: 100 },
+    { id: "pirate", name: "Пираты", x: "🏴‍☠️", o: "🦜", price: 150 },
     { id: "star_moon", name: "Космос", x: "⭐", o: "🌙", price: 200 },
+    { id: "halloween", name: "Хэллоуин", x: "🎃", o: "👻", price: 300 },
     { id: "fruit", name: "Фрукты", x: "🍎", o: "🍌", price: 350 },
+    { id: "sport", name: "Спорт", x: "⚽", o: "🏀", price: 450 },
+    { id: "animals", name: "Животные", x: "🐱", o: "🐶", price: 550 },
     { id: "ninja", name: "Ниндзя", x: "⚔️", o: "🛡️", price: 650 },
-    { id: "royal", name: "Королевский", x: "👑", o: "💎", price: 1000 }
+    { id: "food", name: "Еда", x: "🍕", o: "🍔", price: 750 },
+    { id: "tech", name: "Технологии", x: "💻", o: "📱", price: 850 },
+    { id: "royal", name: "Королевский", x: "👑", o: "💎", price: 1000 },
+    { id: "magic", name: "Магия", x: "🔮", o: "🪄", price: 1200 },
+    { id: "cyber", name: "Киберпанк", x: "🤖", o: "👾", price: 1500 },
+    { id: "diamond_vip", name: "Алмазный VIP", x: "💎", o: "🔱", price: 2500 }
 ];
 
 let gameState = {
@@ -245,7 +255,7 @@ function initEvents() {
 
     document.querySelectorAll(".cell").forEach(cell => {
         cell.addEventListener("click", (e) => {
-            const idx = e.target.getAttribute("data-index");
+            const idx = e.currentTarget.getAttribute("data-index");
             
             if (!gameState.gameActive || gameState.board[idx] !== "") return;
             if (gameState.isAiGame && gameState.currentPlayer !== gameState.playerSymbol) return;
@@ -551,7 +561,7 @@ function renderEventShop() {
                 alert("Недостаточно Карандашей! Побеждай в играх (+10 ✏️ за победу).");
             }
         });
-        });
+    });
 
     document.querySelectorAll(".btn-equip-event").forEach(btn => {
         btn.addEventListener("click", (e) => {
