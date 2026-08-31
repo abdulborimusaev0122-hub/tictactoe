@@ -2,7 +2,6 @@ window.onerror = function(msg, url, lineNo) {
     alert("ОШИБКА: " + msg + "\nСтрока: " + lineNo);
     return false;
 };
-alert("Скрипт запустился!");
 
 // Конфигурация Firebase
 const firebaseConfig = {
@@ -16,7 +15,6 @@ const firebaseConfig = {
     measurementId: "G-JTML3Q850K"
 };
 
-// Безопасная инициализация Firebase
 let db = null;
 try {
     if (typeof firebase !== 'undefined') {
@@ -29,7 +27,6 @@ try {
     console.error("Ошибка Firebase:", e);
 }
 
-// Telegram WebApp
 const tg = window.Telegram?.WebApp;
 if (tg) {
     try {
@@ -44,12 +41,15 @@ let userData = savedData ? JSON.parse(savedData) : {
     id: tg?.initDataUnsafe?.user?.id || "guest_" + Math.floor(Math.random() * 1000),
     name: tg?.initDataUnsafe?.user?.first_name || "Игрок",
     balance: 200,
+    pencils: 0,
     xp: 0,
     level: 1,
     wins: 0,
     inventory: ["default"],
     equippedSkin: { id: "default", name: "Классика", x: "❌", o: "⭕" }
 };
+
+if (userData.pencils === undefined) userData.pencils = 0;
 
 function saveData() {
     localStorage.setItem("tictactoe_user_data", JSON.stringify(userData));
@@ -68,7 +68,6 @@ let selectedPlayerForChallenge = null;
 let allOnlinePlayers = [];
 let localLobbies = [];
 
-// Подключение к Firebase
 if (db) {
     try {
         const playerRef = db.ref('players/' + userData.id);
@@ -98,22 +97,58 @@ if (db) {
     }
 }
 
+// ШКОЛЬНЫЕ СКИНЫ С ПРЯМЫМИ ССЫЛКАМИ НА КАРТИНКИ
+const eventSkinsCatalog = [
+    { 
+        id: "school_pen", 
+        name: "Ручка vs Карандаш", 
+        x: '<img src="https://cdn-icons-png.flaticon.com/512/1250/1250615.png" class="skin-img" style="width:30px;height:30px;">', 
+        o: '<img src="https://cdn-icons-png.flaticon.com/512/588/588395.png" class="skin-img" style="width:30px;height:30px;">', 
+        pricePencils: 20, 
+        isEvent: true 
+    },
+    { 
+        id: "school_bag", 
+        name: "Портфель vs Дневник", 
+        x: '<img src="https://cdn-icons-png.flaticon.com/512/2921/2921222.png" class="skin-img" style="width:30px;height:30px;">', 
+        o: '<img src="https://cdn-icons-png.flaticon.com/512/2232/2232688.png" class="skin-img" style="width:30px;height:30px;">', 
+        pricePencils: 50, 
+        isEvent: true 
+    },
+    { 
+        id: "school_geo", 
+        name: "Глобус vs Карта", 
+        x: '<img src="https://cdn-icons-png.flaticon.com/512/2921/2921226.png" class="skin-img" style="width:30px;height:30px;">', 
+        o: '<img src="https://cdn-icons-png.flaticon.com/512/854/854878.png" class="skin-img" style="width:30px;height:30px;">', 
+        pricePencils: 65, 
+        isEvent: true 
+    },
+    { 
+        id: "school_math", 
+        name: "Циркуль vs Калькулятор", 
+        x: '<img src="https://cdn-icons-png.flaticon.com/512/3208/3208728.png" class="skin-img" style="width:30px;height:30px;">', 
+        o: '<img src="https://cdn-icons-png.flaticon.com/512/2311/2311531.png" class="skin-img" style="width:30px;height:30px;">', 
+        pricePencils: 80, 
+        isEvent: true 
+    },
+    { 
+        id: "school_cup", 
+        name: "Шапочка vs Кубок", 
+        x: '<img src="https://cdn-icons-png.flaticon.com/512/2997/2997313.png" class="skin-img" style="width:30px;height:30px;">', 
+        o: '<img src="https://cdn-icons-png.flaticon.com/512/3112/3112946.png" class="skin-img" style="width:30px;height:30px;">', 
+        pricePencils: 150, 
+        isEvent: true 
+    }
+];
+
+// ОБЫЧНЫЕ СКИНЫ
 const skinsCatalog = [
     { id: "default", name: "Классика", x: "❌", o: "⭕", price: 0 },
     { id: "fire_ice", name: "Огонь и Лёд", x: "🔥", o: "❄️", price: 100 },
     { id: "star_moon", name: "Космос", x: "⭐", o: "🌙", price: 200 },
-    { id: "fruit", name: "Фруктовый Микс", x: "🍎", o: "🍌", price: 350 },
-    { id: "animal", name: "Джунгли", x: "🦁", o: "🐯", price: 500 },
+    { id: "fruit", name: "Фрукты", x: "🍎", o: "🍌", price: 350 },
     { id: "ninja", name: "Ниндзя", x: "⚔️", o: "🛡️", price: 650 },
-    { id: "magic", name: "Магия", x: "🪄", o: "🔮", price: 800 },
-    { id: "royal", name: "Королевский", x: "👑", o: "💎", price: 1000 },
-    { id: "toxic", name: "Заражение", x: "☣️", o: "💀", price: 1250 },
-    { id: "cyber", name: "Киберпанк", x: "⚡", o: "🤖", price: 1500 },
-    { id: "space", name: "Пришельцы", x: "🛸", o: "👾", price: 1800 },
-    { id: "dragon", name: "Драконы", x: "🐉", o: "🐲", price: 2200 },
-    { id: "ghost", name: "Мистика", x: "👻", o: "🎃", price: 2700 },
-    { id: "neon", name: "Неоновый Взрыв", x: "🌀", o: "💥", price: 3500 },
-    { id: "godly", name: "Божественный", x: "🔱", o: "☀️", price: 5000 }
+    { id: "royal", name: "Королевский", x: "👑", o: "💎", price: 1000 }
 ];
 
 let gameState = {
@@ -143,6 +178,8 @@ function updateUI() {
     };
 
     setTxt("user-balance", userData.balance);
+    setTxt("user-pencils", userData.pencils);
+    setTxt("event-pencils-count", "✏️ " + userData.pencils);
     setTxt("user-name", userData.name);
     setTxt("prof-name", userData.name);
     setTxt("prof-balance", userData.balance);
@@ -159,7 +196,6 @@ function updateUI() {
 }
 
 function initEvents() {
-    // Вкладки снизу
     const navButtons = document.querySelectorAll(".nav-btn");
     const tabContents = document.querySelectorAll(".tab-content");
 
@@ -176,6 +212,7 @@ function initEvents() {
             document.getElementById(targetTab)?.classList.remove("hidden");
 
             if (targetTab === "tab-shop") renderShop();
+            if (targetTab === "tab-event") renderEventShop();
             if (targetTab === "tab-home") {
                 renderOnlinePlayers();
                 renderLobbies();
@@ -201,7 +238,6 @@ function initEvents() {
         alert(`Заявка отправлена игроку ${selectedPlayerForChallenge.name}!`);
     });
 
-    // Окно игры с ИИ
     const modalAi = document.getElementById("modal-ai");
     document.getElementById("btn-open-ai-modal")?.addEventListener("click", () => {
         modalAi?.classList.remove("hidden");
@@ -223,7 +259,6 @@ function initEvents() {
         startWheelSpin(true);
     });
 
-    // Клики по ячейкам поля
     document.querySelectorAll(".cell").forEach(cell => {
         cell.addEventListener("click", (e) => {
             const idx = e.target.getAttribute("data-index");
@@ -236,11 +271,12 @@ function initEvents() {
 
             if (checkWin(gameState.currentPlayer)) {
                 userData.balance += 50;
+                userData.pencils += 10;
                 userData.wins += 1;
                 userData.xp += 70;
                 checkLevelUp();
                 updateUI();
-                showGameOver(true, "Вы выиграли! +50 🪙 и +70 XP");
+                showGameOver(true, "Победа! +50 🪙, +10 ✏️ Карандашей и +70 XP");
                 return;
             }
 
@@ -374,7 +410,7 @@ function startWheelSpin(isAi) {
         setTimeout(() => {
             const userSymbol = isUserX ? "X" : "O";
             const userIcon = isUserX ? userData.equippedSkin.x : userData.equippedSkin.o;
-            if (resultEl) resultEl.textContent = `Твой символ: ${userIcon}!`;
+            if (resultEl) resultEl.innerHTML = `Твой символ: ${userIcon}`;
 
             setTimeout(() => {
                 wheelArea?.classList.add("hidden");
@@ -404,16 +440,16 @@ function initGame(isAi, userSymbol) {
 function updateGameStatus() {
     const icon = gameState.currentPlayer === "X" ? userData.equippedSkin.x : userData.equippedSkin.o;
     const statusEl = document.getElementById("game-status");
-    if (statusEl) statusEl.textContent = `Ход: ${icon}`;
+    if (statusEl) statusEl.innerHTML = `Ход: ${icon}`;
 }
 
 function renderBoard() {
     const cells = document.querySelectorAll(".cell");
     cells.forEach((cell, idx) => {
         const val = gameState.board[idx];
-        if (val === "X") cell.textContent = userData.equippedSkin.x;
-        else if (val === "O") cell.textContent = userData.equippedSkin.o;
-        else cell.textContent = "";
+        if (val === "X") cell.innerHTML = userData.equippedSkin.x;
+        else if (val === "O") cell.innerHTML = userData.equippedSkin.o;
+        else cell.innerHTML = "";
     });
 }
 
@@ -483,66 +519,29 @@ function showGameOver(isWin, desc) {
     modal?.classList.remove("hidden");
 }
 
-function renderShop() {
-    const shopList = document.getElementById("shop-list");
-    if (!shopList) return;
-    shopList.innerHTML = "";
+function renderEventShop() {
+    const eventShopList = document.getElementById("event-shop-list");
+    if (!eventShopList) return;
+    eventShopList.innerHTML = "";
 
-    skinsCatalog.forEach(skin => {
+    eventSkinsCatalog.forEach(skin => {
         const isBought = userData.inventory.includes(skin.id);
         const isEquipped = userData.equippedSkin && userData.equippedSkin.id === skin.id;
 
         const card = document.createElement("div");
-        card.className = "shop-card";
+        card.className = "shop-card event-card";
         card.innerHTML = `
             <div>
                 <b>${skin.name}</b>
-                <div class="skin-icons">${skin.x} ${skin.o}</div>
-                <div style="font-size: 12px; color: #8a9ba8; margin-top:2px;">${isBought ? "Куплено" : "Цена: " + skin.price + " 🪙"}</div>
+                <div class="skin-icons" style="display:flex; align-items:center; gap:8px; margin-top:5px;">
+                    ${skin.x} <span>vs</span> ${skin.o}
+                </div>
+                <div style="font-size: 12px; color: #ff9f43; margin-top:4px;">
+                    ${isBought ? "Куплено ✅" : "Цена: " + skin.pricePencils + " ✏️"}
+                </div>
             </div>
             <div>
                 ${isEquipped 
                     ? '<button class="btn btn-blue-dark" style="padding:8px 14px;" disabled>Надето</button>'
                     : isBought 
-                    ? `<button class="btn btn-blue-bright btn-equip" style="padding:8px 14px;" data-id="${skin.id}">Надеть</button>`
-                    : `<button class="btn btn-blue-bright btn-buy" style="padding:8px 14px;" data-id="${skin.id}">Купить</button>`
-                }
-            </div>
-        `;
-        shopList.appendChild(card);
-    });
-
-    document.querySelectorAll(".btn-buy").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-            const skinId = e.target.getAttribute("data-id");
-            const skin = skinsCatalog.find(s => s.id === skinId);
-            if (userData.balance >= skin.price) {
-                userData.balance -= skin.price;
-                userData.inventory.push(skin.id);
-                userData.equippedSkin = skin;
-                updateUI();
-                renderShop();
-            } else {
-                alert("Недостаточно монет! Играй и побеждай.");
-            }
-        });
-    });
-
-    document.querySelectorAll(".btn-equip").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-            const skinId = e.target.getAttribute("data-id");
-            const skin = skinsCatalog.find(s => s.id === skinId);
-            userData.equippedSkin = skin;
-            updateUI();
-            renderShop();
-        });
-    });
-}
-
-// Запуск инициализации событий
-if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initEvents);
-} else {
-    initEvents();
-           }
-            
+                    ? `<button class="btn btn-blue-bright btn-eq
