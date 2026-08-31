@@ -2,85 +2,98 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tic-tac-toe</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Tic-Tac-Toe Online</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="style.css?v=2">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 </head>
 <body>
-    <div class="app-wrapper">
-        <header>
-            <span id="user-name" class="username">Игрок</span>
-            <div class="balance-badge">
-                🪙 <span id="user-balance">200</span>
+    <div class="app-container">
+        <!-- Шапка -->
+        <header class="header">
+            <div class="user-info">
+                <span class="user-name" id="user-name">Игрок</span>
+            </div>
+            <div class="currencies">
+                <div class="currency-badge balance-badge">
+                    🪙 <span id="user-balance">200</span>
+                </div>
+                <div class="currency-badge pencil-badge">
+                    ✏️ <span id="user-pencils">0</span>
+                </div>
             </div>
         </header>
 
-        <!-- Главная -->
+        <!-- Вкладка: Главная -->
         <main id="tab-home" class="tab-content">
-            <button id="btn-open-ai-modal" class="btn btn-blue-bright">
-                🤖 Играть с ИИ
-            </button>
+            <button id="btn-open-ai-modal" class="btn btn-main">🎮 Игра с ИИ</button>
+            
+            <div class="section-title">Онлайн Игроки</div>
+            <input type="text" id="input-search-player" placeholder="Поиск игрока..." class="search-input">
+            <div id="online-players-list" class="scroll-list"></div>
 
-            <!-- Онлайн игроки -->
-            <div class="section-header">
-                <span class="section-title">🌐 Игроки Онлайн</span>
-                <button id="btn-refresh-online" class="btn-icon" title="Обновить">🔄</button>
+            <div class="section-title" style="margin-top: 15px;">Активные Вызовы</div>
+            <div id="lobbies-list" class="scroll-list"></div>
+        </main>
+
+        <!-- Вкладка: Ивент «1 Сентября» -->
+        <main id="tab-event" class="tab-content hidden">
+            <div class="event-banner">
+                <h2>📚 Ивент «1 Сентября»</h2>
+                <p>Побеждай в играх, получай ✏️ Карандаши и покупай эксклюзивные школьные скины!</p>
+                <div class="event-pencils-info">
+                    Баланс: <b id="event-pencils-count">✏️ 0</b>
+                </div>
             </div>
+            <div class="section-title">Ивентовый Магазин</div>
+            <div id="event-shop-list" class="shop-grid"></div>
+        </main>
 
-            <div class="search-box">
-                <input type="text" id="input-search-player" placeholder="🔍 Поиск друга..." />
-            </div>
+        <!-- Вкладка: Обычный Магазин -->
+        <main id="tab-shop" class="tab-content hidden">
+            <div class="section-title">Обычный Магазин Скинов</div>
+            <div id="shop-list" class="shop-grid"></div>
+        </main>
 
-            <div id="online-players-list" class="lobbies-container">
-                <div class="empty-state">Загрузка игроков...</div>
-            </div>
-
-            <!-- Входящие дуэли -->
-            <div class="section-title" style="margin-top:15px;">⚔️ Входящие дуэли</div>
-            <div id="lobbies-list" class="lobbies-container">
-                <div class="empty-state">Нет активных заявок</div>
+        <!-- Вкладка: Профиль -->
+        <main id="tab-profile" class="tab-content hidden">
+            <div class="profile-card">
+                <h2 id="prof-name">Игрок</h2>
+                <div class="profile-tag" id="prof-tag">Новичок</div>
+                <div class="profile-stat">Монеты: 🪙 <span id="prof-balance">200</span></div>
+                <div class="profile-stat">Победы: 🏆 <span id="prof-wins">0</span></div>
+                <div class="profile-stat">Экипирован: <b id="prof-skin-name">Классика</b></div>
+                <div class="profile-stat">Уровень: <span id="prof-level">1</span></div>
+                
+                <div class="xp-container">
+                    <div class="xp-bar" id="prof-xp-bar"></div>
+                </div>
+                <div class="xp-text" id="prof-xp-text">0 / 1000 XP</div>
             </div>
         </main>
 
-        <!-- Модалка выбора сложности ИИ -->
-        <div id="modal-ai" class="modal hidden">
-            <div class="modal-content">
-                <h3>Выбери сложность</h3>
-                <button id="btn-ai-easy" class="btn btn-blue-bright">🟢 Легкая</button>
-                <button id="btn-ai-hard" class="btn btn-blue-dark">🔴 Сложная (Непобедимый)</button>
-                <button id="btn-cancel-ai" class="btn btn-decline" style="margin-top:5px;">Отмена</button>
-            </div>
-        </div>
-
-        <!-- Модалка информации об игроке -->
-        <div id="modal-player-info" class="modal hidden">
-            <div class="modal-content">
-                <h3 id="info-player-name">Игрок</h3>
-                <p style="font-size: 13px; color: #8a9ba8;">Статус: <span style="color:#38ef7d;">В сети 🟢</span></p>
-                <div class="modal-actions">
-                    <button id="btn-send-challenge" class="btn btn-blue-bright">Кинуть заявку</button>
-                    <button id="btn-close-player-info" class="btn btn-blue-dark">Закрыть</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Колесо жеребьёвки -->
-        <section id="wheel-area" class="hidden">
-            <div class="status-text">Определение ролей (❌ или ⭕)...</div>
-            <div class="wheel-container">
-                <div class="wheel-pointer">▼</div>
+        <!-- Экран Колеса Выбора -->
+        <div id="wheel-area" class="tab-content hidden overlay-screen">
+            <h2 id="wheel-result">Крутим колесо...</h2>
+            <div class="wheel-box">
                 <div id="wheel" class="wheel">
-                    <div class="wheel-sector sector-x">❌</div>
-                    <div class="wheel-sector sector-o">⭕</div>
+                    <div class="wheel-half wheel-x">X</div>
+                    <div class="wheel-half wheel-o">O</div>
                 </div>
+                <div class="wheel-pointer">▼</div>
             </div>
-            <div id="wheel-result" class="status-text" style="margin-top: 15px;">Крутим колесо...</div>
-        </section>
+        </div>
 
-        <!-- Игровое поле -->
-        <section id="game-area" class="hidden">
-            <div id="game-status" class="status-text">Ход: ❌</div>
+        <!-- Игровое Поле -->
+        <div id="game-area" class="tab-content hidden">
+            <div class="game-header">
+                <span id="game-status">Ход: X</span>
+                <button id="btn-quit" class="btn btn-red btn-sm">Выйти</button>
+            </div>
             <div class="board" id="board">
                 <div class="cell" data-index="0"></div>
                 <div class="cell" data-index="1"></div>
@@ -92,93 +105,54 @@
                 <div class="cell" data-index="7"></div>
                 <div class="cell" data-index="8"></div>
             </div>
-            <button id="btn-quit" class="btn btn-blue-dark">Сдаться и выйти</button>
-        </section>
-
-        <!-- Модалка конца игры -->
-        <div id="modal-game-over" class="modal hidden">
-            <div class="modal-content text-center">
-                <h2 id="game-over-title">Победа!</h2>
-                <div id="game-over-icon" style="font-size: 50px; margin: 10px 0;">🎉</div>
-                <p id="game-over-desc" style="color: #8a9ba8; font-size: 14px;"></p>
-                <button id="btn-go-home" class="btn btn-blue-bright" style="margin-top: 10px;">Вернуться домой 🏠</button>
-            </div>
         </div>
 
-        <!-- Магазин скинов -->
-        <main id="tab-shop" class="tab-content hidden">
-            <h2 class="page-title">🛍️ Магазин скинов</h2>
-            <div id="shop-list" class="shop-grid"></div>
-        </main>
-
-        <!-- Лидерборд -->
-        <main id="tab-leaderboard" class="tab-content hidden">
-            <h2 class="page-title">🏆 Топ Игроков</h2>
-            <div id="leaderboard-list">
-                <p style="color: #8a9ba8; text-align: center;">Загрузка рейтинга...</p>
-            </div>
-        </main>
-
-        <!-- Красивый профиль -->
-        <main id="tab-profile" class="tab-content hidden">
-            <div class="profile-card-fancy">
-                <div class="profile-avatar-container">
-                    <div class="profile-avatar" id="prof-avatar">🎮</div>
-                    <span class="profile-tag" id="prof-tag">Новичок</span>
-                </div>
-                <h2 class="profile-title" id="prof-name">Игрок</h2>
-                
-                <!-- Уровень и опыт -->
-                <div class="level-box">
-                    <div class="level-info">
-                        <span>Уровень <b id="prof-level">1</b></span>
-                        <span id="prof-xp-text">0 / 100 XP</span>
-                    </div>
-                    <div class="progress-bar-bg">
-                        <div class="progress-bar-fill" id="prof-xp-bar"></div>
-                    </div>
-                </div>
-
-                <!-- Статистика -->
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <span class="stat-val" id="prof-balance">200</span>
-                        <span class="stat-label">Монет 🪙</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-val" id="prof-wins">0</span>
-                        <span class="stat-label">Побед 🏆</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-val" id="prof-skin-name">Классический</span>
-                        <span class="stat-label">Скин 🎨</span>
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <!-- Навигация -->
+        <!-- Нижнее Меню Навигации -->
         <nav class="bottom-nav">
             <button class="nav-btn active" data-tab="tab-home">
-                <span class="nav-icon">🏠</span>
-                <span class="nav-label">Главная</span>
+                <span>🏠</span> Главная
+            </button>
+            <button class="nav-btn event-nav-btn" data-tab="tab-event">
+                <span>🎒</span> Ивент
             </button>
             <button class="nav-btn" data-tab="tab-shop">
-                <span class="nav-icon">🛒</span>
-                <span class="nav-label">Магазин</span>
-            </button>
-            <button class="nav-btn" data-tab="tab-leaderboard">
-                <span class="nav-icon">🏆</span>
-                <span class="nav-label">Лидерборд</span>
+                <span>🛒</span> Магазин
             </button>
             <button class="nav-btn" data-tab="tab-profile">
-                <span class="nav-icon">👤</span>
-                <span class="nav-label">Профиль</span>
+                <span>👤</span> Профиль
             </button>
         </nav>
     </div>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <script src="script.js?v=10"></script>
+
+    <!-- Модальное окно выбора сложности ИИ -->
+    <div id="modal-ai" class="modal hidden">
+        <div class="modal-content">
+            <h3>Выберите сложность</h3>
+            <button id="btn-ai-easy" class="btn btn-green">Легкая</button>
+            <button id="btn-ai-hard" class="btn btn-orange">Сложная</button>
+            <button id="btn-cancel-ai" class="btn btn-gray">Отмена</button>
+        </div>
+    </div>
+
+    <!-- Модальное окно информации об игроке -->
+    <div id="modal-player-info" class="modal hidden">
+        <div class="modal-content">
+            <h3 id="info-player-name">Игрок</h3>
+            <button id="btn-send-challenge" class="btn btn-blue">Вызвать на дуэль</button>
+            <button id="btn-close-player-info" class="btn btn-gray">Закрыть</button>
+        </div>
+    </div>
+
+    <!-- Модальное окно конца игры -->
+    <div id="modal-game-over" class="modal hidden">
+        <div class="modal-content">
+            <div id="game-over-icon" style="font-size: 40px;">🎉</div>
+            <h2 id="game-over-title">ПОБЕДА!</h2>
+            <p id="game-over-desc">Описание</p>
+            <button id="btn-go-home" class="btn btn-blue">В главное меню</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
