@@ -104,7 +104,7 @@ const eventSkinsCatalog = [
         name: "Ручка vs Карандаш", 
         x: '<img src="https://cdn-icons-png.flaticon.com/512/1250/1250615.png" class="skin-img">', 
         o: '<img src="https://cdn-icons-png.flaticon.com/512/588/588395.png" class="skin-img">', 
-        pricePencils: 20, 
+        pricePencils: 900, 
         isEvent: true 
     },
     { 
@@ -112,7 +112,7 @@ const eventSkinsCatalog = [
         name: "Портфель vs Дневник", 
         x: '<img src="https://cdn-icons-png.flaticon.com/512/2921/2921222.png" class="skin-img">', 
         o: '<img src="https://cdn-icons-png.flaticon.com/512/2232/2232688.png" class="skin-img">', 
-        pricePencils: 50, 
+        pricePencils: 1500, 
         isEvent: true 
     },
     { 
@@ -120,7 +120,7 @@ const eventSkinsCatalog = [
         name: "Глобус vs Карта", 
         x: '<img src="https://cdn-icons-png.flaticon.com/512/2921/2921226.png" class="skin-img">', 
         o: '<img src="https://cdn-icons-png.flaticon.com/512/854/854878.png" class="skin-img">', 
-        pricePencils: 65, 
+        pricePencils: 2000, 
         isEvent: true 
     }
 ];
