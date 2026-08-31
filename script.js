@@ -97,7 +97,7 @@ if (db) {
     }
 }
 
-// ШКОЛЬНЫЕ СКИНЫ (С ПРЯМЫМИ ССЫЛКАМИ НА КАРТИНКИ)
+// ИВЕНТОВЫЕ СКИНЫ С КАРТИНКАМИ
 const eventSkinsCatalog = [
     { 
         id: "school_pen", 
@@ -121,22 +121,6 @@ const eventSkinsCatalog = [
         x: '<img src="https://cdn-icons-png.flaticon.com/512/2921/2921226.png" class="skin-img">', 
         o: '<img src="https://cdn-icons-png.flaticon.com/512/854/854878.png" class="skin-img">', 
         pricePencils: 65, 
-        isEvent: true 
-    },
-    { 
-        id: "school_math", 
-        name: "Циркуль vs Калькулятор", 
-        x: '<img src="https://cdn-icons-png.flaticon.com/512/3208/3208728.png" class="skin-img">', 
-        o: '<img src="https://cdn-icons-png.flaticon.com/512/2311/2311531.png" class="skin-img">', 
-        pricePencils: 80, 
-        isEvent: true 
-    },
-    { 
-        id: "school_cup", 
-        name: "Шапочка vs Кубок", 
-        x: '<img src="https://cdn-icons-png.flaticon.com/512/2997/2997313.png" class="skin-img">', 
-        o: '<img src="https://cdn-icons-png.flaticon.com/512/3112/3112946.png" class="skin-img">', 
-        pricePencils: 150, 
         isEvent: true 
     }
 ];
@@ -323,7 +307,7 @@ function renderOnlinePlayers(query = "") {
     const filtered = allOnlinePlayers.filter(p => p.name.toLowerCase().includes(query));
 
     if (filtered.length === 0) {
-        listEl.innerHTML = `<div class="empty-state" style="color:#8a9ba8; font-size:13px;">Нет игроков в сети</div>`;
+        listEl.innerHTML = `<div class="empty-state">Нет игроков в сети</div>`;
         return;
     }
 
@@ -350,7 +334,7 @@ function renderLobbies() {
     listEl.innerHTML = "";
 
     if (localLobbies.length === 0) {
-        listEl.innerHTML = `<div class="empty-state" style="color:#8a9ba8; font-size:13px;">Нет активных заявок</div>`;
+        listEl.innerHTML = `<div class="empty-state">Нет активных заявок</div>`;
         return;
     }
 
@@ -360,7 +344,7 @@ function renderLobbies() {
         card.innerHTML = `
             <span>${lobby.authorName} (Вызов)</span>
             <div>
-                <button class="btn-accept btn btn-blue btn-sm" data-index="${index}">Принять</button>
+                <button class="btn-accept btn btn-blue-bright btn-sm" data-index="${index}">Принять</button>
                 <button class="btn-decline btn btn-red btn-sm" data-index="${index}">✕</button>
             </div>
         `;
@@ -529,7 +513,7 @@ function renderEventShop() {
         const isEquipped = userData.equippedSkin && userData.equippedSkin.id === skin.id;
 
         const card = document.createElement("div");
-        card.className = "shop-card event-card";
+        card.className = "shop-card";
         card.innerHTML = `
             <div>
                 <b>${skin.name}</b>
@@ -564,10 +548,10 @@ function renderEventShop() {
                 renderEventShop();
                 alert(`Вы приобрели скин "${skin.name}"!`);
             } else {
-                alert("Недостаточно Карандашиков! Побеждай в играх (+10 ✏️ за победу).");
+                alert("Недостаточно Карандашей! Побеждай в играх (+10 ✏️ за победу).");
             }
         });
-    });
+        });
 
     document.querySelectorAll(".btn-equip-event").forEach(btn => {
         btn.addEventListener("click", (e) => {
@@ -585,28 +569,17 @@ function renderShop() {
     if (!shopList) return;
     shopList.innerHTML = "";
 
-    const ownedEventSkins = eventSkinsCatalog.filter(s => userData.inventory.includes(s.id));
-    const combinedCatalog = [...ownedEventSkins, ...skinsCatalog];
-
-    combinedCatalog.forEach(skin => {
+    skinsCatalog.forEach(skin => {
         const isBought = userData.inventory.includes(skin.id);
         const isEquipped = userData.equippedSkin && userData.equippedSkin.id === skin.id;
 
         const card = document.createElement("div");
-        card.className = skin.isEvent ? "shop-card event-owned" : "shop-card";
-        
-        let priceTag = isBought ? "Куплено" : "Цена: " + skin.price + " 🪙";
-        if (skin.isEvent) {
-            priceTag = "<span style='color:#ff9f43;'>Школьный Эксклюзив</span>";
-        }
-
+        card.className = "shop-card";
         card.innerHTML = `
             <div>
-                <b>${skin.name} ${skin.isEvent ? "⭐" : ""}</b>
-                <div class="skin-icons" style="display:flex; align-items:center; gap:8px; margin-top:5px;">
-                    ${skin.x} <span>vs</span> ${skin.o}
-                </div>
-                <div style="font-size: 12px; color: #8a9ba8; margin-top:4px;">${priceTag}</div>
+                <b>${skin.name}</b>
+                <div class="skin-icons">${skin.x} ${skin.o}</div>
+                <div style="font-size: 12px; color: #8a9ba8; margin-top:2px;">${isBought ? "Куплено" : "Цена: " + skin.price + " 🪙"}</div>
             </div>
             <div>
                 ${isEquipped 
@@ -639,12 +612,10 @@ function renderShop() {
     document.querySelectorAll(".btn-equip").forEach(btn => {
         btn.addEventListener("click", (e) => {
             const skinId = e.target.getAttribute("data-id");
-            const skin = [...eventSkinsCatalog, ...skinsCatalog].find(s => s.id === skinId);
-            if (skin) {
-                userData.equippedSkin = skin;
-                updateUI();
-                renderShop();
-            }
+            const skin = skinsCatalog.find(s => s.id === skinId);
+            userData.equippedSkin = skin;
+            updateUI();
+            renderShop();
         });
     });
 }
